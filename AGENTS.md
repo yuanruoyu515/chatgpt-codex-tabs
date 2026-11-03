@@ -11,6 +11,7 @@ The project adds a tab bar to the Codex desktop app by injecting `src/renderer.j
 - Do not quit, kill or relaunch the user's ChatGPT / Codex / CodexHost processes without asking first. They may have work in progress.
 - Do not install CodexHost on the user's behalf without asking. It is a separate project with its own installer.
 - Report the final `python3 doctor.py` output verbatim.
+- Stock CodexHost does not take over when the user opens the app from the Dock, Finder or Spotlight. The cold-start helper that fixes this is in the unmerged PR [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702). Offer it; install it only if the user agrees ([setup guide](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md)).
 
 ## 1. Check preconditions
 
@@ -56,7 +57,7 @@ python3 doctor.py; echo "exit=$?"
 | `Desktop app` | No ChatGPT.app / Codex.app in `/Applications` | Stop and tell the user |
 | `CodexHost` | CodexHost not installed | Tell the user; link the repo above |
 | `Injector LaunchAgent` | LaunchAgent not running | Re-run `python3 install.py`; check `~/Library/Application Support/chatgpt-tabs-inject/service.log` |
-| `App started with a debug port` | App is not running, or was opened without CodexHost | Ask the user to quit the app and start it through CodexHost. Do not restart it yourself without permission |
+| `App started with a debug port` | App is not running, or was opened without CodexHost | Ask the user to quit the app and start it through CodexHost. Do not restart it yourself without permission. If they want Dock launches to work, offer the cold-start helper from codex-host#702 (see Ground rules) |
 | `Tab bar injected` | Port found but nothing injected yet | Wait 5 seconds and rerun. Still failing: read `inject.log` (doctor prints its tail). If the log shows `installed` but the bar is missing, the app's DOM probably changed; see below |
 
 ## 4. When the app's DOM changed

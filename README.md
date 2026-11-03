@@ -55,6 +55,17 @@ Then start Codex Desktop through CodexHost the way its README describes. The tab
 python3 doctor.py
 ```
 
+> [!NOTE]
+> **Opening the app from the Dock.** Stock CodexHost only takes over when you start the app through CodexHost. Open ChatGPT/Codex straight from the Dock, Finder or Spotlight and there is no debug port, so no tab bar. I wrote an opt-in helper that hands those cold starts to CodexHost automatically: [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702). It is not merged yet. Until it is, either start through CodexHost every time, or install the helper from my branch ([setup guide](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md); needs macOS 13+ and Swift 6 from the Xcode Command Line Tools):
+>
+> ```bash
+> git clone -b feat/macos-cold-start-automation https://github.com/yuanruoyu515/codex-host.git
+> cd codex-host
+> python3 tools/macos-auto-launch/manage.py install
+> ```
+>
+> On each cold start the app restarts once (the window flashes briefly). That restart is CodexHost taking over.
+
 Each line reads `[ok]` or `[!!]`, and the exit code is 0 once the bar is live.
 
 You can delete the cloned folder afterwards. `install.py` copies what it needs to `~/Library/Application Support/chatgpt-tabs-inject/` and registers the LaunchAgent `com.ruoyu.chatgpt-tabs.inject`, which starts at login.

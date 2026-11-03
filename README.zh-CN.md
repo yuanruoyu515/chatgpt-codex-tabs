@@ -55,6 +55,17 @@ python3 install.py
 python3 doctor.py
 ```
 
+> [!NOTE]
+> **从 Dock 直接打开的情况**：原版 CodexHost 只有在你经它启动 App 时才会接管。直接从 Dock、访达或聚焦搜索打开 ChatGPT/Codex，就没有调试端口，也就没有标签栏。我另外写了一个可选的小工具，App 冷启动时自动交给 CodexHost 接管，已经提了 PR：[codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702)，还没合并。合并之前有两个办法：每次都经 CodexHost 启动；或者从我的分支装这个工具（[安装说明](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md)，需要 macOS 13 以上和 Xcode Command Line Tools 里的 Swift 6）：
+>
+> ```bash
+> git clone -b feat/macos-cold-start-automation https://github.com/yuanruoyu515/codex-host.git
+> cd codex-host
+> python3 tools/macos-auto-launch/manage.py install
+> ```
+>
+> 每次冷启动，App 会重开一次，窗口闪一下，这是 CodexHost 在接管。
+
 每行显示 `[ok]` 或 `[!!]`；标签栏生效时退出码是 0。
 
 装完可以把克隆下来的文件夹删掉。`install.py` 会把需要的文件复制到 `~/Library/Application Support/chatgpt-tabs-inject/`，再注册 LaunchAgent `com.ruoyu.chatgpt-tabs.inject`，登录后自动运行。

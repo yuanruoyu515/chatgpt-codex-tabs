@@ -7,6 +7,7 @@
   <img alt="macOS" src="https://img.shields.io/badge/platform-macOS-18181B?logo=apple&logoColor=white">
   <img alt="Python 3, standard library only" src="https://img.shields.io/badge/Python_3-stdlib_only-3B82F6?logo=python&logoColor=white">
   <a href="https://github.com/BytePioneer-AI/codex-host"><img alt="Requires CodexHost" src="https://img.shields.io/badge/needs-CodexHost-3B82F6"></a>
+  <a href="https://linux.do/"><img alt="Recognizes the LINUX DO community" src="https://img.shields.io/badge/community-LINUX%20DO-FFB000"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-18181B"></a>
   <a href="https://www.threads.com/@realtimyry"><img alt="Threads @realtimyry" src="https://img.shields.io/badge/Threads-@realtimyry-18181B?logo=threads&logoColor=white"></a>
 </p>

@@ -80,7 +80,9 @@ def evaluate(url, expression):
 def main():
     source = (ROOT / 'renderer.js').read_text()
     version = hashlib.sha256(source.encode()).hexdigest()[:16]
-    expression = (f"window.__ruoyuTabsVersion === '{version}' && window.__ruoyuTabs ? 'present' : "
+    # Polling sends only this short probe; the full source goes over the wire only when a window needs it.
+    probe = f"window.__ruoyuTabsVersion === '{version}' && !!window.__ruoyuTabs"
+    expression = (f"({probe}) ? 'present' : "
                   f"(({source.strip()})({BRIDGE}), window.__ruoyuTabsVersion = '{version}', 'installed')")
     log(f'started, renderer {version}')
     seen = {}
@@ -90,8 +92,8 @@ def main():
         for port in live:
             try:
                 for url in targets(port):
-                    result = evaluate(url, expression)
-                    if result == 'installed': log(f'installed on port {port}')
+                    if evaluate(url, probe) is not True and evaluate(url, expression) == 'installed':
+                        log(f'installed on port {port}')
                     busy = busy or seen.get(port, 0) < 20
                 seen[port] = seen.get(port, 0) + 1
             except (OSError, ValueError, ConnectionError) as e:

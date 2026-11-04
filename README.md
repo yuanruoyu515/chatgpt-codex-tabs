@@ -21,8 +21,10 @@ Nothing inside the app bundle changes. A small background script injects the tab
 ## <img src="assets/icons/cursor-click.svg" width="20" height="20" align="top"> What you get
 
 - Open a thread in the sidebar and it gets a tab.
-- Click a tab, or press <kbd>⌘1</kbd> to <kbd>⌘9</kbd>, to switch.
-- Drag tabs to reorder them.
+- Click a tab, or press <kbd>⌘1</kbd> to <kbd>⌘8</kbd>, to switch. <kbd>⌘9</kbd> jumps to the last tab.
+- Drag a tab to move it. The other tabs slide out of the way; <kbd>Esc</kbd> cancels.
+- Right-click a tab for the same menu the sidebar shows: rename, pin, archive, open in new window and the rest.
+- A blue dot marks a thread that is still running.
 - <kbd>×</kbd> closes the tab only. The thread is not deleted or archived. Middle-click works too.
 - <kbd>+</kbd> starts a new chat.
 - The logo on each tab is the same icon CodexHost draws in the sidebar. Hover a tab to see the agent's name.
@@ -85,7 +87,7 @@ Set up https://github.com/yuanruoyu515/chatgpt-codex-tabs on this Mac. Follow AG
 2. `src/inject.py` runs as a LaunchAgent. It watches `ps` for the app process with that flag, reads `http://127.0.0.1:<port>/json` and finds the main window (`app://-/index.html`).
 3. It sends `src/renderer.js` over the DevTools protocol with `Runtime.evaluate`. The script is versioned by its own hash, so a reload or a changed `renderer.js` gets re-injected within a few seconds and an unchanged one is left alone.
 4. `renderer.js` reads the sidebar rows (`data-app-action-sidebar-thread-*`) to build tabs. It copies the agent logo from CodexHost's `data-codexhost-sidebar-agent-icon` span and caches it per agent in `localStorage`, so a tab keeps its logo while its sidebar row is collapsed or scrolled away.
-5. Switching tabs clicks the sidebar row, or falls back to the app's own `open-in-main-window` message.
+5. Switching tabs clicks the sidebar row, or falls back to the app's own `open-in-main-window` message. Right-clicking a tab sends the click to that row, so the app opens its own menu.
 
 I tried patching first: copy the app, edit `app.asar`, re-sign it ad hoc. macOS refused to launch it (spawn error 163 from restricted entitlements, then library validation failing on mixed Team IDs), and every official update would have meant doing it all again. Runtime injection skips all of that, and I'd pick it again.
 
@@ -101,6 +103,7 @@ A tab bar that is already on screen goes away on the next reload or app restart.
 ## <img src="assets/icons/warning-circle.svg" width="20" height="20" align="top"> Limits
 
 - Local Codex threads only. Remote hosts, cloud tasks and plain ChatGPT chats do not get tabs yet.
+- The right-click menu needs the thread's row in the sidebar. If the thread sits in a collapsed project, you get a smaller menu that can only close tabs.
 - Only the main window has a tab bar. Windows opened with "Open in new window" do not.
 - Without CodexHost there is no debug port, so no tab bar. Without CodexHost's sidebar icons, tabs show titles only.
 - It depends on the app's DOM attributes. If an update renames `data-app-action-sidebar-thread-*` or the `open-in-main-window` message, the bar stops appearing until the selectors are updated. `doctor.py` will still show the injector running.

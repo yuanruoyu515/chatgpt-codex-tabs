@@ -75,8 +75,8 @@
   };
   const style = document.createElement('style');
   style.textContent = `
-    #ruoyu-chat-tabs{--rt-fg:var(--color-text-primary-ghost,#1f2328);--rt-muted:var(--color-text-secondary-ghost,#1f23287e);--rt-hover:var(--color-background-primary-ghost-hover,#1f23280e);--rt-line:var(--color-border,#1f232814);--rt-ring:var(--color-ring,#0969da);--rt-ease:var(--ease-enter-snappy,cubic-bezier(.23,1,.32,1));
-      position:fixed;z-index:100;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden;user-select:none;-webkit-user-select:none}
+    #ruoyu-chat-tabs,#ruoyu-chat-tabs-menu{--rt-fg:var(--color-text-primary-ghost,#1f2328);--rt-muted:var(--color-text-secondary-ghost,#1f23287e);--rt-hover:var(--color-background-primary-ghost-hover,#1f23280e);--rt-line:var(--color-border,#1f232814);--rt-ring:var(--color-ring,#0969da);--rt-ease:var(--ease-enter-snappy,cubic-bezier(.23,1,.32,1))}
+    #ruoyu-chat-tabs{position:fixed;z-index:100;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden;user-select:none;-webkit-user-select:none}
     #ruoyu-chat-tabs *{-webkit-user-drag:none}
     #ruoyu-chat-tabs[hidden]{display:none!important}
     #ruoyu-chat-tabs .rt-list{position:relative;display:flex;align-items:center;gap:2px;min-width:0;flex:1;height:100%;overflow-x:auto;scrollbar-width:none}
@@ -101,6 +101,12 @@
     #ruoyu-chat-tabs .rt-close:hover{background:var(--rt-hover);color:var(--rt-fg)}
     #ruoyu-chat-tabs .rt-add{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:var(--radius-md,10px);color:var(--rt-muted);transition:background-color .15s,color .15s}
     #ruoyu-chat-tabs .rt-add:hover{background:var(--rt-hover);color:var(--rt-fg)}
+    #ruoyu-chat-tabs-menu{position:fixed;z-index:1000;min-width:180px;padding:5px;box-sizing:border-box;border-radius:12px;border:1px solid var(--rt-line);background:var(--rt-bg,Canvas);color:var(--rt-fg);box-shadow:0 8px 28px rgb(0 0 0/.16);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);user-select:none;-webkit-app-region:no-drag}
+    #ruoyu-chat-tabs-menu[hidden]{display:none}
+    #ruoyu-chat-tabs-menu button{display:block;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:default}
+    #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible):not(:disabled){background:var(--rt-hover);outline:none}
+    #ruoyu-chat-tabs-menu button:disabled{color:var(--rt-muted)}
+    #ruoyu-chat-tabs-menu p{margin:2px 10px 6px;color:var(--rt-muted);font-size:12px}
     [data-ruoyu-tabs-space]{padding-top:40px!important;box-sizing:border-box!important}
     @media(prefers-reduced-motion:reduce){#ruoyu-chat-tabs *{transition:none!important}}
     @media(forced-colors:active){#ruoyu-chat-tabs .rt-active{outline:1px solid Highlight}}
@@ -110,7 +116,8 @@
   const list = document.createElement('div'); list.className = 'rt-list'; list.setAttribute('role','tablist'); bar.append(list);
   const add = document.createElement('button'); add.className = 'rt-add'; add.innerHTML = icon.plus; add.title = '新建对话'; add.setAttribute('aria-label', '新建对话');
   add.addEventListener('click', () => navigate('/'), opts); bar.append(add);
-  document.head.append(style); document.body.append(bar);
+  const menu = document.createElement('div'); menu.id = 'ruoyu-chat-tabs-menu'; menu.setAttribute('role', 'menu'); menu.hidden = true;
+  document.head.append(style); document.body.append(bar, menu);
   let spaced, background = '';
   // Follows the main surface when the sidebar is dragged or toggled, without waiting for the next poll.
   const resized = new ResizeObserver(() => layout());
@@ -131,7 +138,7 @@
     bar.style.left = `${Math.max(0, rect.left)}px`; bar.style.top = `${top}px`;
     bar.style.width = `${rect.width}px`;
     const bg = getComputedStyle(main).backgroundColor;
-    if (bg !== background) { background = bg; bar.style.background = bg; bar.style.setProperty('--rt-bg', bg); }
+    if (bg !== background) { background = bg; bar.style.background = bg; bar.style.setProperty('--rt-bg', bg); menu.style.setProperty('--rt-bg', bg); }
   }
   function go(id) {
     if (!id) return;
@@ -145,6 +152,13 @@
     const at = tabs.findIndex(t => t.id === id); if (at < 0) return;
     suppressed = id; tabs.splice(at, 1); persist();
     if (id === active) { active = ''; pending = null; if (tabs.length) go(tabs[Math.min(at, tabs.length - 1)].id); else navigate('/'); }
+    render(); layout();
+  }
+  // Close several tabs at once; if the selected one goes, `keep` becomes the selection.
+  function closeOthers(keep, gone) {
+    const ids = new Set(gone.map(t => t.id)); if (!ids.size) return;
+    tabs = tabs.filter(t => !ids.has(t.id)); persist();
+    if (ids.has(active)) { suppressed = active; active = ''; pending = null; go(keep); }
     render(); layout();
   }
   // One element set per tab, kept across renders: a refresh only touches what changed.
@@ -274,6 +288,48 @@
     if (drag?.moved && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); endDrag(false); }
   }, { capture: true, signal: abort.signal });
   window.addEventListener('blur', () => drag && endDrag(false), opts);
+  // Right-click shows the app's own thread menu (rename, pin, archive, ...) by replaying the
+  // event on the thread's sidebar row; the app opens its native menu at the given coordinates.
+  function threadMenu(id, x, y) {
+    const row = rowFor(id, true);
+    if (!row) return tabMenu(id, x, y);
+    row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, composed: true, view: window,
+      clientX: x, clientY: y, screenX: window.screenX + x, screenY: window.screenY + y, button: 2, buttons: 2 }));
+  }
+  // Fallback when the thread is not in the sidebar (e.g. inside a collapsed project): tab actions only.
+  function tabMenu(id, x, y) {
+    const at = tabs.findIndex(t => t.id === id);
+    const entries = [
+      ['关闭标签', () => close(id), true],
+      ['关闭其他标签', () => closeOthers(id, tabs.filter(t => t.id !== id)), tabs.length > 1],
+      ['关闭右侧标签', () => closeOthers(id, tabs.slice(at + 1)), at < tabs.length - 1],
+    ];
+    const note = document.createElement('p'); note.textContent = '侧栏里没有这个对话，只能管理标签';
+    menu.replaceChildren(note, ...entries.map(([label, run, enabled]) => {
+      const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled;
+      b.addEventListener('click', () => { hideMenu(); run(); });
+      return b;
+    }));
+    menu.hidden = false;
+    const r = menu.getBoundingClientRect();
+    menu.style.left = `${Math.max(4, Math.min(x, innerWidth - r.width - 4))}px`;
+    menu.style.top = `${Math.max(4, Math.min(y, innerHeight - r.height - 4))}px`;
+    menu.querySelector('button:not(:disabled)')?.focus();
+  }
+  function hideMenu() { if (!menu.hidden) { menu.hidden = true; menu.replaceChildren(); } }
+  document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) hideMenu(); }, { capture: true, signal: abort.signal });
+  window.addEventListener('blur', hideMenu, opts);
+  window.addEventListener('resize', hideMenu, opts);
+  menu.addEventListener('keydown', e => {
+    const items = [...menu.querySelectorAll('button:not(:disabled)')], i = items.indexOf(document.activeElement);
+    if (e.key === 'Escape') { e.preventDefault(); hideMenu(); list.querySelector('.rt-active .rt-open')?.focus(); }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]?.focus(); }
+  }, opts);
+  list.addEventListener('contextmenu', e => {
+    const item = e.target.closest('.rt-item'); if (!item) return;
+    e.preventDefault(); e.stopPropagation();
+    if (!drag?.moved) threadMenu(item.dataset.id, e.clientX, e.clientY);
+  }, opts);
   function startDrag() {
     const d = drag, items = [...list.children];
     d.moved = true; d.items = items; d.from = d.to = items.indexOf(d.item);
@@ -360,8 +416,11 @@
     if (e.key === 'End') next = buttons.length-1;
     if (next != null) { e.preventDefault(); buttons[next].focus(); }
     if (e.key === 'Delete') { e.preventDefault(); close(buttons[i].dataset.id); }
+    if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
+      e.preventDefault(); const r = buttons[i].getBoundingClientRect(); threadMenu(buttons[i].dataset.id, r.left, r.bottom);
+    }
   },opts);
   const interval = setInterval(refresh,1500);
-  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); style.remove(); delete window.__ruoyuTabs; } };
+  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); menu.remove(); style.remove(); delete window.__ruoyuTabs; } };
   refresh();
 })

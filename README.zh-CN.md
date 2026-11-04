@@ -34,6 +34,14 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
   <img alt="带四种 Agent logo 的标签栏" src="assets/tabs-light.png">
 </picture>
 
+拖动标签时，其他标签会让开：
+
+<img alt="拖动一个标签换位置，其他标签跟着让开" src="assets/drag-reorder.gif" width="800">
+
+右键标签，出来的是侧栏原本的菜单：
+
+<img alt="标签上的右键菜单：重命名、置顶、标记为未读、分叉、分享、在新窗口中打开、归档、永久删除等" src="assets/context-menu.png" width="642">
+
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> 需要什么
 
 | | |

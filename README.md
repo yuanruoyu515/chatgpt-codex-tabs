@@ -35,6 +35,14 @@ Nothing inside the app bundle changes. A small background script injects the tab
   <img alt="The tab bar with four agents" src="assets/tabs-light.png">
 </picture>
 
+Drag a tab and the others slide out of the way.
+
+<img alt="A tab dragged to a new position while the other tabs move aside" src="assets/drag-reorder.gif" width="800">
+
+Right-clicking a tab opens the sidebar's own menu.
+
+<img alt="Right-click menu on a tab with rename, pin, mark as unread, fork, share, open in new window, archive and delete" src="assets/context-menu.png" width="642">
+
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> Requirements
 
 | | |

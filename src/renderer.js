@@ -76,13 +76,18 @@
   const style = document.createElement('style');
   style.textContent = `
     #ruoyu-chat-tabs{--rt-fg:var(--color-text-primary-ghost,#1f2328);--rt-muted:var(--color-text-secondary-ghost,#1f23287e);--rt-hover:var(--color-background-primary-ghost-hover,#1f23280e);--rt-line:var(--color-border,#1f232814);--rt-ring:var(--color-ring,#0969da);--rt-ease:var(--ease-enter-snappy,cubic-bezier(.23,1,.32,1));
-      position:fixed;z-index:100;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden}
+      position:fixed;z-index:100;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden;user-select:none;-webkit-user-select:none}
+    #ruoyu-chat-tabs *{-webkit-user-drag:none}
     #ruoyu-chat-tabs[hidden]{display:none!important}
     #ruoyu-chat-tabs .rt-list{position:relative;display:flex;align-items:center;gap:2px;min-width:0;flex:1;height:100%;overflow-x:auto;scrollbar-width:none}
     #ruoyu-chat-tabs .rt-list::-webkit-scrollbar{display:none}
     #ruoyu-chat-tabs .rt-item{position:relative;display:flex;align-items:center;flex:0 1 200px;min-width:84px;height:28px;padding:0 3px 0 10px;border-radius:var(--radius-md,10px);color:var(--rt-muted);cursor:default;transition:background-color .15s var(--rt-ease),color .15s var(--rt-ease),opacity .15s}
     #ruoyu-chat-tabs .rt-item:hover{background:var(--rt-hover);color:var(--rt-fg)}
     #ruoyu-chat-tabs .rt-item.rt-active{background:var(--rt-hover);color:var(--rt-fg)}
+    #ruoyu-chat-tabs.rt-reordering .rt-item:not(.rt-lifted),#ruoyu-chat-tabs .rt-item.rt-settle{transition:transform .2s var(--rt-ease),background-color .15s var(--rt-ease),color .15s var(--rt-ease)}
+    #ruoyu-chat-tabs.rt-reordering .rt-item:not(.rt-lifted):not(.rt-active){background:transparent}
+    #ruoyu-chat-tabs .rt-item.rt-lifted{z-index:1;color:var(--rt-fg);background:linear-gradient(var(--rt-hover),var(--rt-hover)),var(--rt-bg,Canvas);box-shadow:0 1px 2px rgb(0 0 0/.1),0 4px 14px rgb(0 0 0/.1)}
+    #ruoyu-chat-tabs.rt-reordering .rt-close{opacity:0!important}
     #ruoyu-chat-tabs button{font:inherit;color:inherit;background:transparent;border:0;padding:0;margin:0;cursor:default;-webkit-app-region:no-drag}
     #ruoyu-chat-tabs button:focus-visible{outline:2px solid var(--rt-ring);outline-offset:-2px;border-radius:var(--radius-sm,7px)}
     #ruoyu-chat-tabs .rt-open{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-align:left}
@@ -126,7 +131,7 @@
     bar.style.left = `${Math.max(0, rect.left)}px`; bar.style.top = `${top}px`;
     bar.style.width = `${rect.width}px`;
     const bg = getComputedStyle(main).backgroundColor;
-    if (bg !== background) { background = bg; bar.style.background = bg; }
+    if (bg !== background) { background = bg; bar.style.background = bg; bar.style.setProperty('--rt-bg', bg); }
   }
   function go(id) {
     if (!id) return;
@@ -198,6 +203,7 @@
   function refresh() {
     if (disposed) return;
     clearTimeout(timer); timer = 0;
+    if (drag?.moved) return;  // endDrag() refreshes once the tab is dropped
     const byId = new Map(); let selected = null;
     for (const r of sidebarRows()) {
       if (!isLocal(r)) continue;
@@ -242,8 +248,92 @@
   list.addEventListener('click', e => {
     const item = e.target.closest('.rt-item'); if (!item) return;
     if (e.target.closest('.rt-close')) { e.stopPropagation(); close(item.dataset.id); }
-    else if (e.target.closest('.rt-open')) go(item.dataset.id);
+    // Mouse presses were handled on pointerdown; this is Enter/Space on a focused tab.
+    else if (e.detail === 0 && e.target.closest('.rt-open')) go(item.dataset.id);
   }, opts);
+  // Drag to reorder, with pointer events rather than HTML drag and drop: no ghost image, the
+  // tab follows the pointer, the others slide aside, and nothing can be dropped into the composer.
+  let drag = null;
+  list.addEventListener('pointerdown', e => {
+    // A press released outside the bar without moving leaves a stale, unmoved drag: replace it.
+    if (e.button !== 0 || drag?.moved || e.target.closest('.rt-close')) return;
+    const item = e.target.closest('.rt-item'); if (!item) return;
+    // Select on press, as browsers do; dragging still works from here.
+    go(item.dataset.id);
+    drag = { id: item.dataset.id, item, pointerId: e.pointerId, startX: e.clientX, x: e.clientX, moved: false };
+  }, opts);
+  list.addEventListener('pointermove', e => {
+    if (!drag || e.pointerId !== drag.pointerId) return;
+    drag.x = e.clientX;
+    if (!drag.moved) { if (Math.abs(drag.x - drag.startX) < 5) return; startDrag(); }
+    dragUpdate();
+  }, opts);
+  list.addEventListener('pointerup', e => { if (drag && e.pointerId === drag.pointerId) endDrag(true); }, opts);
+  list.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.pointerId) endDrag(false); }, opts);
+  document.addEventListener('keydown', e => {
+    if (drag?.moved && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); endDrag(false); }
+  }, { capture: true, signal: abort.signal });
+  window.addEventListener('blur', () => drag && endDrag(false), opts);
+  function startDrag() {
+    const d = drag, items = [...list.children];
+    d.moved = true; d.items = items; d.from = d.to = items.indexOf(d.item);
+    d.lefts = items.map(it => it.offsetLeft); d.widths = items.map(it => it.offsetWidth);
+    d.width = d.widths[d.from]; d.end = d.lefts.at(-1) + d.widths.at(-1);
+    d.gap = items.length > 1 ? d.lefts[1] - d.lefts[0] - d.widths[0] : 0;
+    d.scroll0 = list.scrollLeft;
+    try { list.setPointerCapture(d.pointerId); } catch {}
+    bar.classList.add('rt-reordering'); d.item.classList.remove('rt-settle'); d.item.classList.add('rt-lifted');
+    const edge = 36, step = () => {
+      if (drag !== d) return;
+      const r = list.getBoundingClientRect();
+      const v = d.x < r.left + edge ? -(r.left + edge - d.x) : d.x > r.right - edge ? d.x - (r.right - edge) : 0;
+      if (v && list.scrollWidth > list.clientWidth) { list.scrollLeft += Math.max(-14, Math.min(14, v / 2.5)); dragUpdate(); }
+      d.raf = requestAnimationFrame(step);
+    };
+    d.raf = requestAnimationFrame(step);
+  }
+  function dragUpdate() {
+    const d = drag, start = d.lefts[d.from];
+    const left = Math.min(Math.max(start + d.x - d.startX + list.scrollLeft - d.scroll0, 0), d.end - d.width);
+    d.item.style.transform = `translateX(${left - start}px)`;
+    const center = left + d.width / 2;
+    let to = 0;
+    d.items.forEach((it, k) => { if (k !== d.from && d.lefts[k] + d.widths[k] / 2 < center) to++; });
+    if (to === d.to) return;
+    d.to = to;
+    const shift = d.width + d.gap;
+    d.items.forEach((it, k) => {
+      if (k === d.from) return;
+      const s = d.from < k && k <= to ? -shift : to <= k && k < d.from ? shift : 0;
+      it.style.transform = s ? `translateX(${s}px)` : '';
+    });
+  }
+  function endDrag(commit) {
+    const d = drag; drag = null;
+    if (!d?.moved) return;
+    cancelAnimationFrame(d.raf);
+    try { list.releasePointerCapture(d.pointerId); } catch {}
+    const moved = commit && d.to !== d.from;
+    const before = d.item.getBoundingClientRect().left;
+    if (moved) {
+      const at = tabs.findIndex(t => t.id === d.id);
+      if (at >= 0) { const [t] = tabs.splice(at, 1); tabs.splice(d.to, 0, t); persist(); }
+    } else {
+      // Cancelled or dropped in place: let the others slide back.
+      d.items.forEach(it => { if (it !== d.item) it.classList.add('rt-settle'); });
+    }
+    bar.classList.remove('rt-reordering');
+    // After a move the new DOM order matches where the others already sit, so they snap invisibly.
+    d.items.forEach(it => { it.style.transform = ''; });
+    render();
+    // Slide the dropped tab from under the pointer into its slot.
+    d.item.style.transform = `translateX(${before - d.item.getBoundingClientRect().left}px)`;
+    d.item.offsetWidth;
+    d.item.classList.add('rt-settle'); d.item.style.transform = '';
+    const done = () => d.items.forEach(it => { if (drag?.item !== it) it.classList.remove('rt-settle', 'rt-lifted'); });
+    setTimeout(done, 220);
+    refresh();
+  }
   list.addEventListener('auxclick', e => {
     const item = e.target.closest('.rt-item');
     if (item && e.button === 1) { e.preventDefault(); close(item.dataset.id); }
@@ -272,6 +362,6 @@
     if (e.key === 'Delete') { e.preventDefault(); close(buttons[i].dataset.id); }
   },opts);
   const interval = setInterval(refresh,1500);
-  window.__ruoyuTabs = { dispose() { disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); style.remove(); delete window.__ruoyuTabs; } };
+  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); style.remove(); delete window.__ruoyuTabs; } };
   refresh();
 })

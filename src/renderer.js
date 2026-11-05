@@ -353,9 +353,13 @@
     const d = drag, start = d.lefts[d.from];
     const left = Math.min(Math.max(start + d.x - d.startX + list.scrollLeft - d.scroll0, 0), d.end - d.width);
     d.item.style.transform = `translateX(${left - start}px)`;
-    const center = left + d.width / 2;
+    // Swap with a neighbour once the leading edge crosses its midpoint. Testing the dragged tab's
+    // centre instead never reaches the last slot: the clamp stops it exactly on the last midpoint.
     let to = 0;
-    d.items.forEach((it, k) => { if (k !== d.from && d.lefts[k] + d.widths[k] / 2 < center) to++; });
+    d.items.forEach((it, k) => {
+      const mid = d.lefts[k] + d.widths[k] / 2;
+      if (k < d.from ? left >= mid : k > d.from && left + d.width > mid) to++;
+    });
     if (to === d.to) return;
     d.to = to;
     const shift = d.width + d.gap;

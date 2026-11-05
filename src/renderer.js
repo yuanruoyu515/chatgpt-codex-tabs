@@ -73,10 +73,11 @@
     close: '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>',
     plus: '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 2.5v9M2.5 7h9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>'
   };
+  // z-index 45: above the app's in-page layers (up to z-40), below its menus, dialogs and dimming overlays (z-50 and up).
   const style = document.createElement('style');
   style.textContent = `
     #ruoyu-chat-tabs,#ruoyu-chat-tabs-menu{--rt-fg:var(--color-text-primary-ghost,#1f2328);--rt-muted:var(--color-text-secondary-ghost,#1f23287e);--rt-hover:var(--color-background-primary-ghost-hover,#1f23280e);--rt-line:var(--color-border,#1f232814);--rt-ring:var(--color-ring,#0969da);--rt-ease:var(--ease-enter-snappy,cubic-bezier(.23,1,.32,1))}
-    #ruoyu-chat-tabs{position:fixed;z-index:100;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden;user-select:none;-webkit-user-select:none}
+    #ruoyu-chat-tabs{position:fixed;z-index:45;display:flex;align-items:center;gap:6px;height:40px;padding:0 10px 0 12px;box-sizing:border-box;border-bottom:1px solid var(--rt-line);color:var(--rt-fg);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);-webkit-app-region:no-drag;overflow:hidden;user-select:none;-webkit-user-select:none}
     #ruoyu-chat-tabs *{-webkit-user-drag:none}
     #ruoyu-chat-tabs[hidden]{display:none!important}
     #ruoyu-chat-tabs .rt-list{position:relative;display:flex;align-items:center;gap:2px;min-width:0;flex:1;height:100%;overflow-x:auto;scrollbar-width:none}

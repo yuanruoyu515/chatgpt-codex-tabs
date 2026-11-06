@@ -335,11 +335,14 @@
       if (kind === 'sub') { b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.append(Object.assign(document.createElement('span'), { className: 'rt-chevron', textContent: '›' })); }
       if (run && kind === 'sub') {
         // macOS puts a native menu under the pointer when it is opened right after a mouse click,
-        // whatever position is asked for. Opened on hover, as submenus are, it sits beside the item.
+        // whatever position is asked for. So it opens on hover only, as submenus do, and sits
+        // beside the item. A press cancels the pending open; the next pointer move restarts it.
         let hover = 0;
-        b.addEventListener('pointerenter', () => { clearTimeout(hover); hover = setTimeout(() => { if (!nativeAt && b.isConnected) run(b); }, 120); });
-        b.addEventListener('pointerleave', () => clearTimeout(hover));
-        b.addEventListener('click', () => { clearTimeout(hover); if (!nativeAt) run(b); });
+        b.addEventListener('pointermove', () => { if (!hover) hover = setTimeout(() => { hover = 0; if (!nativeAt && b.isConnected) run(b); }, 120); });
+        b.addEventListener('pointerleave', () => { clearTimeout(hover); hover = 0; });
+        b.addEventListener('pointerdown', () => { clearTimeout(hover); hover = 0; });
+        // Mouse clicks do nothing here; Enter or Space (a click with detail 0) still opens it.
+        b.addEventListener('click', e => { if (e.detail === 0 && !nativeAt) run(b); });
         b.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); if (!nativeAt) run(b); } });
       }
       else if (run) b.addEventListener('click', () => {

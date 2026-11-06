@@ -67,7 +67,7 @@ python3 doctor.py; echo "exit=$?"
 - Sidebar rows: `[data-app-action-sidebar-thread-row]`, with `-id` (`local:<uuid>`), `-title`, `-active`, `-host-id`
 - Layout: `[data-app-shell-main-surface]`, `[data-app-shell-main-titlebar]`, `[data-app-shell-main-content-layout]`
 - Navigation: `window.electronBridge.sendMessageFromView({type: 'open-in-main-window', path})`
-- Context menu: a `contextmenu` event dispatched on a sidebar row opens the app's native thread menu at the event's coordinates
+- Context menu: right-clicking a tab opens the tab bar's own menu (`#ruoyu-chat-tabs-menu`). Its 对话选项… item dispatches a `contextmenu` event on the sidebar row, which opens the app's native thread menu at the event's coordinates
 - Running state: `[data-loading-indicator]` inside a row
 - Thread ids: `local:<uuid>`, or `local:client-new-thread:<uuid>` for threads started in this session
 - Agent logo (from CodexHost): `[data-codexhost-sidebar-agent-icon]` inside each row

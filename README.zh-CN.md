@@ -22,7 +22,7 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 - 在侧栏点开一个对话，上方就多一个标签
 - 点标签，或按 <kbd>⌘1</kbd> 到 <kbd>⌘8</kbd> 切换；<kbd>⌘9</kbd> 跳到最后一个
 - 拖动标签调整顺序，其他标签会让开位置；按 <kbd>Esc</kbd> 取消
-- 右键标签，弹出的菜单和侧栏右键一样：重命名、置顶、归档、在新窗口中打开等
+- 右键标签可以关闭这个标签、关闭其他标签、关闭右侧标签；菜单里的「对话选项…」会弹出侧栏原本的菜单：重命名、置顶、归档、在新窗口中打开等
 - 还在运行的对话，标签上有个蓝点
 - 点 <kbd>×</kbd> 只关标签，对话不会被删除或归档；鼠标中键也能关
 - 点 <kbd>+</kbd> 新建对话
@@ -38,7 +38,7 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 
 <img alt="拖动一个标签换位置，其他标签跟着让开" src="assets/drag-reorder.gif" width="800">
 
-右键标签，出来的是侧栏原本的菜单：
+在标签右键菜单里点「对话选项…」，出来的是侧栏原本的菜单：
 
 <img alt="标签上的右键菜单：重命名、置顶、标记为未读、分叉、分享、在新窗口中打开、归档、永久删除等" src="assets/context-menu.png" width="642">
 
@@ -94,7 +94,7 @@ Set up https://github.com/yuanruoyu515/chatgpt-codex-tabs on this Mac. Follow AG
 2. `src/inject.py` 作为 LaunchAgent 常驻，从 `ps` 里找带这个参数的 App 进程，读 `http://127.0.0.1:<端口>/json`，找到主窗口（`app://-/index.html`）。
 3. 它用 DevTools 协议的 `Runtime.evaluate` 把 `src/renderer.js` 送进去。脚本按自身内容的哈希算版本：页面刷新了，或者 `renderer.js` 改了，几秒内会重新注入；没变就不动。
 4. `renderer.js` 读侧栏每一行的 `data-app-action-sidebar-thread-*` 属性来生成标签，再从 CodexHost 的 `data-codexhost-sidebar-agent-icon` 复制 Agent logo，按 Agent 缓存到 `localStorage`。侧栏折叠或滚走了，标签上的 logo 也还在。
-5. 切换标签时点侧栏对应那一行；找不到那一行，就发 App 自己的 `open-in-main-window` 消息。右键标签时，把右键转给侧栏那一行，菜单由 App 自己弹出。
+5. 切换标签时点侧栏对应那一行；找不到那一行，就发 App 自己的 `open-in-main-window` 消息。右键标签弹出的是标签栏自己的菜单；点里面的「对话选项…」，才把右键转给侧栏那一行，由 App 弹出它自己的菜单。App 那个菜单是系统原生菜单，加不进标签操作。
 
 我一开始走的是改包的路：复制一份 App，改 `app.asar`，再 ad-hoc 重签名。macOS 直接拒绝启动（先是受限 entitlement 导致 spawn error 163，后来 Team ID 不一致，库校验又过不去），而且每次官方更新都得从头再来一遍。运行时注入没有这些麻烦，再选一次我还是选它。
 
@@ -110,7 +110,7 @@ rm -rf ~/Library/Application\ Support/chatgpt-tabs-inject
 ## <img src="assets/icons/warning-circle.svg" width="20" height="20" align="top"> 限制
 
 - 只支持本地 Codex 对话。远程主机、云任务和普通 ChatGPT 对话暂时没有标签。
-- 右键菜单要靠侧栏里对应的那一行。对话在折叠起来的项目里时，只会出一个简化菜单，只能关标签。
+- 「对话选项…」要靠侧栏里对应的那一行。对话在折叠起来的项目里时，标签菜单只能关标签。
 - 只有主窗口有标签栏，「在新窗口中打开」开出来的窗口没有。
 - 没有 CodexHost 就没有调试端口，也就没有标签栏。CodexHost 的侧栏图标没了，标签就只显示标题。
 - 依赖 App 的 DOM 属性。哪天更新把 `data-app-action-sidebar-thread-*` 或 `open-in-main-window` 改名了，标签栏就不会出现，要等选择器跟着改。这时 `doctor.py` 仍会显示注入器在运行。

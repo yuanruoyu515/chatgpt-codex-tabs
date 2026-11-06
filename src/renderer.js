@@ -104,8 +104,9 @@
     #ruoyu-chat-tabs .rt-add:hover{background:var(--rt-hover);color:var(--rt-fg)}
     #ruoyu-chat-tabs-menu{position:fixed;z-index:1000;min-width:180px;padding:5px;box-sizing:border-box;border-radius:12px;border:1px solid var(--rt-line);background:var(--rt-bg,Canvas);color:var(--rt-fg);box-shadow:0 8px 28px rgb(0 0 0/.16);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);user-select:none;-webkit-app-region:no-drag}
     #ruoyu-chat-tabs-menu[hidden]{display:none}
-    #ruoyu-chat-tabs-menu button{display:block;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:default}
-    #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible):not(:disabled){background:var(--rt-hover);outline:none}
+    #ruoyu-chat-tabs-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:default}
+    #ruoyu-chat-tabs-menu .rt-chevron{color:var(--rt-muted)}
+    #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible,.rt-expanded):not(:disabled){background:var(--rt-hover);outline:none}
     #ruoyu-chat-tabs-menu button:disabled{color:var(--rt-muted)}
     #ruoyu-chat-tabs-menu hr{height:1px;margin:4px 6px;border:0;background:var(--rt-line)}
     html.rt-dragging,html.rt-dragging *{-webkit-app-region:no-drag!important}
@@ -325,14 +326,16 @@
       ['关闭其他标签', closeOther, tabs.length > 1],
       ['关闭右侧标签', closeRight, at < tabs.length - 1],
       null,
-      hasRow ? ['对话选项…', () => threadMenu(id, x, y), true, false] : ['侧栏里没有这个对话', null, false],
+      hasRow ? ['对话选项…', b => openThreadMenu(id, b), true, 'sub'] : ['侧栏里没有这个对话', null, false],
     ];
     menu.replaceChildren(...entries.map(entry => {
       if (!entry) { const hr = document.createElement('hr'); hr.setAttribute('role', 'separator'); return hr; }
-      const [label, run, enabled, refocus = true] = entry;
+      const [label, run, enabled, kind] = entry;
       const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled; b.tabIndex = -1;
-      if (run) b.addEventListener('click', () => {
-        const back = refocus && menu.contains(document.activeElement), from = menuFrom;
+      if (kind === 'sub') { b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.append(Object.assign(document.createElement('span'), { className: 'rt-chevron', textContent: '›' })); }
+      if (run && kind === 'sub') b.addEventListener('click', () => run(b));
+      else if (run) b.addEventListener('click', () => {
+        const back = menu.contains(document.activeElement), from = menuFrom;
         hideMenu(); run(); if (back) { menuFrom = from; restoreFocus(); }
       });
       return b;
@@ -343,6 +346,27 @@
     menu.style.top = `${Math.max(4, Math.min(y, innerHeight - r.height - 4))}px`;
     menu.querySelector('button:not(:disabled)')?.focus();
   }
+  // The app's menu opens beside "对话选项…" like a submenu, and the tab menu stays up meanwhile.
+  // A native menu takes all input while it is open, so the first pointer move the page sees
+  // again means it has closed: then the tab menu closes too, unless the pointer is back on it.
+  let nativeAt = 0;
+  function openThreadMenu(id, b) {
+    const m = menu.getBoundingClientRect(), r = b.getBoundingClientRect();
+    b.setAttribute('aria-expanded', 'true'); b.classList.add('rt-expanded');
+    nativeAt = performance.now();
+    threadMenu(id, m.right + 2, r.top - 5);
+  }
+  function nativeClosed() {
+    nativeAt = 0;
+    menu.querySelector('.rt-expanded')?.classList.remove('rt-expanded');
+    menu.querySelector('[aria-expanded="true"]')?.setAttribute('aria-expanded', 'false');
+  }
+  document.addEventListener('pointermove', e => {
+    // Ignore moves that arrive before the app has had time to show its menu.
+    if (!nativeAt || performance.now() - nativeAt < 200) return;
+    nativeClosed();
+    if (!menu.contains(e.target)) hideMenu();
+  }, { capture: true, signal: abort.signal });
   function restoreFocus() {
     const from = menuFrom; menuFrom = null;
     const el = [from?.el, nodes.get(from?.id)?.open, list.querySelector('.rt-active .rt-open')]
@@ -352,16 +376,17 @@
   function hideMenu(refocus = false) {
     if (menu.hidden) return;
     const back = refocus && menu.contains(document.activeElement);
-    menu.hidden = true; menu.replaceChildren();
+    menu.hidden = true; menu.replaceChildren(); nativeAt = 0;
     if (back) restoreFocus(); else menuFrom = null;
   }
   document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) hideMenu(); }, { capture: true, signal: abort.signal });
-  window.addEventListener('blur', () => hideMenu(), opts);
+  // The app's native menu may take focus from the window: that blur must not close the tab menu.
+  window.addEventListener('blur', () => { if (!nativeAt) hideMenu(); }, opts);
   window.addEventListener('resize', () => hideMenu(), opts);
   // Pressing an item must not move focus first: that would close the menu before the click lands.
   menu.addEventListener('mousedown', e => e.preventDefault(), opts);
   // Focus that leaves the menu some other way closes it, so it is never left open and unreachable.
-  menu.addEventListener('focusout', e => { if (!menu.hidden && !menu.contains(e.relatedTarget)) hideMenu(); }, opts);
+  menu.addEventListener('focusout', e => { if (!menu.hidden && !nativeAt && !menu.contains(e.relatedTarget)) hideMenu(); }, opts);
   menu.addEventListener('keydown', e => {
     const items = [...menu.querySelectorAll('button:not(:disabled)')], i = items.indexOf(document.activeElement);
     if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); hideMenu(true); }

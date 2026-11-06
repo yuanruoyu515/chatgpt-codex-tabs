@@ -30,6 +30,7 @@ Nothing inside the app bundle changes. A small background script injects the tab
 - <kbd>+</kbd> starts a new chat.
 - The logo on each tab is the same icon CodexHost draws in the sidebar. Hover a tab to see the agent's name.
 - Tab order survives restarts.
+- Menus and labels follow the language Codex is set to. English, Chinese (Simplified and Traditional), Japanese, Korean and 15 more are built in; anything else falls back to English.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/tabs-dark.png">

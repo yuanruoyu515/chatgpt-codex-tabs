@@ -29,6 +29,7 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 - 点 <kbd>+</kbd> 新建对话
 - 标签上的 logo 就是 CodexHost 画在侧栏里的那个图标，鼠标悬停能看到 Agent 名字
 - 重启后标签顺序还在
+- 菜单和提示文字跟着 Codex 设置的语言走。内置简体中文、繁体中文、英语、日语、韩语等 20 种，其他语言显示英语
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/tabs-dark.png">

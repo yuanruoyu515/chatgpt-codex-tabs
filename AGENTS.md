@@ -71,6 +71,7 @@ python3 doctor.py; echo "exit=$?"
 - Running state: `[data-loading-indicator]` inside a row
 - Thread ids: `local:<uuid>`, or `local:client-new-thread:<uuid>` for threads started in this session
 - Agent logo (from CodexHost): `[data-codexhost-sidebar-agent-icon]` inside each row
+- Language: `document.documentElement.lang`, which the app sets from its language setting. UI strings live in the `STRINGS` table at the top of `src/renderer.js`; add a row there to support another language
 
 To inspect, reuse the injector's own client:
 

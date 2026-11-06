@@ -230,7 +230,9 @@
     appActive = (selected && rowId(selected)) || routeId();
     if (pending && (pending.id === appActive || performance.now() - pending.at > 1500)) pending = null;
     const id = pending ? pending.id : appActive;
-    active = id; if (id !== suppressed) suppressed = '';
+    // Keep a just-closed tab suppressed until the app itself has left it: the optimistic
+    // selection (pending) can time out while the app still shows the closed thread.
+    active = id; if (appActive !== suppressed) suppressed = '';
     for (const t of tabs) {
       let row = byId.get(t.id);
       // After a reload the row carries the thread's real id; follow it by title, once the sidebar has loaded.
@@ -307,21 +309,32 @@
     row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, composed: true, view: window,
       clientX: x, clientY: y, screenX: window.screenX + x, screenY: window.screenY + y, button: 2, buttons: 2 }));
   }
+  // Where focus returns when the menu closes: what had it before (the composer after a mouse
+  // right-click, the tab after Shift+F10), else the tab the menu was for, else the selected tab.
+  let menuFrom = null;
   function tabMenu(id, x, y) {
-    const at = tabs.findIndex(t => t.id === id); if (at < 0) return;
-    const hasRow = !!rowFor(id, true);
+    if (!tabs.some(t => t.id === id)) return;
+    const from = menu.hidden ? document.activeElement : menuFrom?.el;
+    menuFrom = { id, el: from };
+    const at = tabs.findIndex(t => t.id === id), hasRow = !!rowFor(id, true);
+    // Positions are looked up again when an item runs: the tab list may change while the menu is open.
+    const closeRight = () => { const i = tabs.findIndex(t => t.id === id); if (i >= 0) closeOthers(id, tabs.slice(i + 1)); };
+    const closeOther = () => { if (tabs.some(t => t.id === id)) closeOthers(id, tabs.filter(t => t.id !== id)); };
     const entries = [
       ['关闭标签', () => close(id), true],
-      ['关闭其他标签', () => closeOthers(id, tabs.filter(t => t.id !== id)), tabs.length > 1],
-      ['关闭右侧标签', () => closeOthers(id, tabs.slice(at + 1)), at < tabs.length - 1],
+      ['关闭其他标签', closeOther, tabs.length > 1],
+      ['关闭右侧标签', closeRight, at < tabs.length - 1],
       null,
-      hasRow ? ['对话选项…', () => threadMenu(id, x, y), true] : ['侧栏里没有这个对话', null, false],
+      hasRow ? ['对话选项…', () => threadMenu(id, x, y), true, false] : ['侧栏里没有这个对话', null, false],
     ];
     menu.replaceChildren(...entries.map(entry => {
       if (!entry) { const hr = document.createElement('hr'); hr.setAttribute('role', 'separator'); return hr; }
-      const [label, run, enabled] = entry;
-      const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled;
-      if (run) b.addEventListener('click', () => { hideMenu(); run(); });
+      const [label, run, enabled, refocus = true] = entry;
+      const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled; b.tabIndex = -1;
+      if (run) b.addEventListener('click', () => {
+        const back = refocus && menu.contains(document.activeElement), from = menuFrom;
+        hideMenu(); run(); if (back) { menuFrom = from; restoreFocus(); }
+      });
       return b;
     }));
     menu.hidden = false;
@@ -330,14 +343,30 @@
     menu.style.top = `${Math.max(4, Math.min(y, innerHeight - r.height - 4))}px`;
     menu.querySelector('button:not(:disabled)')?.focus();
   }
-  function hideMenu() { if (!menu.hidden) { menu.hidden = true; menu.replaceChildren(); } }
+  function restoreFocus() {
+    const from = menuFrom; menuFrom = null;
+    const el = [from?.el, nodes.get(from?.id)?.open, list.querySelector('.rt-active .rt-open')]
+      .find(e => e?.isConnected && e !== document.body && !menu.contains(e));
+    el?.focus({ preventScroll: true });
+  }
+  function hideMenu(refocus = false) {
+    if (menu.hidden) return;
+    const back = refocus && menu.contains(document.activeElement);
+    menu.hidden = true; menu.replaceChildren();
+    if (back) restoreFocus(); else menuFrom = null;
+  }
   document.addEventListener('pointerdown', e => { if (!menu.contains(e.target)) hideMenu(); }, { capture: true, signal: abort.signal });
-  window.addEventListener('blur', hideMenu, opts);
-  window.addEventListener('resize', hideMenu, opts);
+  window.addEventListener('blur', () => hideMenu(), opts);
+  window.addEventListener('resize', () => hideMenu(), opts);
+  // Pressing an item must not move focus first: that would close the menu before the click lands.
+  menu.addEventListener('mousedown', e => e.preventDefault(), opts);
+  // Focus that leaves the menu some other way closes it, so it is never left open and unreachable.
+  menu.addEventListener('focusout', e => { if (!menu.hidden && !menu.contains(e.relatedTarget)) hideMenu(); }, opts);
   menu.addEventListener('keydown', e => {
     const items = [...menu.querySelectorAll('button:not(:disabled)')], i = items.indexOf(document.activeElement);
-    if (e.key === 'Escape') { e.preventDefault(); hideMenu(); list.querySelector('.rt-active .rt-open')?.focus(); }
+    if (e.key === 'Escape' || e.key === 'Tab') { e.preventDefault(); e.stopPropagation(); hideMenu(true); }
     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); items[(i + (e.key === 'ArrowDown' ? 1 : items.length - 1)) % items.length]?.focus(); }
+    if (e.key === 'Home' || e.key === 'End') { e.preventDefault(); items.at(e.key === 'Home' ? 0 : -1)?.focus(); }
   }, opts);
   list.addEventListener('contextmenu', e => {
     const item = e.target.closest('.rt-item'); if (!item) return;

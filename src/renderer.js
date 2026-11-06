@@ -107,7 +107,7 @@
     #ruoyu-chat-tabs-menu button{display:block;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:default}
     #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible):not(:disabled){background:var(--rt-hover);outline:none}
     #ruoyu-chat-tabs-menu button:disabled{color:var(--rt-muted)}
-    #ruoyu-chat-tabs-menu p{margin:2px 10px 6px;color:var(--rt-muted);font-size:12px}
+    #ruoyu-chat-tabs-menu hr{height:1px;margin:4px 6px;border:0;background:var(--rt-line)}
     html.rt-dragging,html.rt-dragging *{-webkit-app-region:no-drag!important}
     [data-ruoyu-tabs-space]{padding-top:40px!important;box-sizing:border-box!important}
     @media(prefers-reduced-motion:reduce){#ruoyu-chat-tabs *{transition:none!important}}
@@ -299,26 +299,29 @@
     if (drag?.moved && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); endDrag(false); }
   }, { capture: true, signal: abort.signal });
   window.addEventListener('blur', () => drag && endDrag(false), opts);
-  // Right-click shows the app's own thread menu (rename, pin, archive, ...) by replaying the
-  // event on the thread's sidebar row; the app opens its native menu at the given coordinates.
+  // Right-click opens a tab menu: tab actions first, then the app's own thread menu (rename, pin,
+  // archive, ...). That menu is native, so it cannot take extra items; "对话选项…" opens it by
+  // replaying the event on the thread's sidebar row, and the app shows it at the given coordinates.
   function threadMenu(id, x, y) {
-    const row = rowFor(id, true);
-    if (!row) return tabMenu(id, x, y);
+    const row = rowFor(id, true); if (!row) return;
     row.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, composed: true, view: window,
       clientX: x, clientY: y, screenX: window.screenX + x, screenY: window.screenY + y, button: 2, buttons: 2 }));
   }
-  // Fallback when the thread is not in the sidebar (e.g. inside a collapsed project): tab actions only.
   function tabMenu(id, x, y) {
-    const at = tabs.findIndex(t => t.id === id);
+    const at = tabs.findIndex(t => t.id === id); if (at < 0) return;
+    const hasRow = !!rowFor(id, true);
     const entries = [
       ['关闭标签', () => close(id), true],
       ['关闭其他标签', () => closeOthers(id, tabs.filter(t => t.id !== id)), tabs.length > 1],
       ['关闭右侧标签', () => closeOthers(id, tabs.slice(at + 1)), at < tabs.length - 1],
+      null,
+      hasRow ? ['对话选项…', () => threadMenu(id, x, y), true] : ['侧栏里没有这个对话', null, false],
     ];
-    const note = document.createElement('p'); note.textContent = '侧栏里没有这个对话，只能管理标签';
-    menu.replaceChildren(note, ...entries.map(([label, run, enabled]) => {
+    menu.replaceChildren(...entries.map(entry => {
+      if (!entry) { const hr = document.createElement('hr'); hr.setAttribute('role', 'separator'); return hr; }
+      const [label, run, enabled] = entry;
       const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled;
-      b.addEventListener('click', () => { hideMenu(); run(); });
+      if (run) b.addEventListener('click', () => { hideMenu(); run(); });
       return b;
     }));
     menu.hidden = false;
@@ -339,7 +342,7 @@
   list.addEventListener('contextmenu', e => {
     const item = e.target.closest('.rt-item'); if (!item) return;
     e.preventDefault(); e.stopPropagation();
-    if (!drag?.moved) threadMenu(item.dataset.id, e.clientX, e.clientY);
+    if (!drag?.moved) tabMenu(item.dataset.id, e.clientX, e.clientY);
   }, opts);
   function startDrag() {
     const d = drag, items = [...list.children];
@@ -438,7 +441,7 @@
     if (next != null) { e.preventDefault(); buttons[next].focus(); }
     if (e.key === 'Delete') { e.preventDefault(); close(buttons[i].dataset.id); }
     if (e.key === 'ContextMenu' || (e.key === 'F10' && e.shiftKey)) {
-      e.preventDefault(); const r = buttons[i].getBoundingClientRect(); threadMenu(buttons[i].dataset.id, r.left, r.bottom);
+      e.preventDefault(); const r = buttons[i].getBoundingClientRect(); tabMenu(buttons[i].dataset.id, r.left, r.bottom);
     }
   },opts);
   const interval = setInterval(refresh,1500);

@@ -37,9 +37,9 @@ Nothing inside the app bundle changes. A small background script injects the tab
   <img alt="The tab bar with four agents" src="assets/tabs-light.png">
 </picture>
 
-Drag a tab and the others slide out of the way.
+Drag a tab and the others slide out of the way. Right-click a tab to close the rest in one go.
 
-<img alt="A tab dragged to a new position while the other tabs move aside" src="assets/drag-reorder.gif" width="800">
+<img alt="A tab dragged to a new position while the other tabs move aside, then its right-click menu used to close the other tabs" src="assets/drag-reorder.gif" width="800">
 
 Right-click a tab for the tab actions. Hover **Thread options…** and the sidebar's own menu opens next to it, while the tab menu stays open.
 

@@ -36,9 +36,9 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
   <img alt="带四种 Agent logo 的标签栏" src="assets/tabs-light.png">
 </picture>
 
-拖动标签时，其他标签会让开：
+拖动标签时，其他标签会让开；右键标签还能一次关掉其他标签：
 
-<img alt="拖动一个标签换位置，其他标签跟着让开" src="assets/drag-reorder.gif" width="800">
+<img alt="拖动一个标签换位置，其他标签跟着让开，再用右键菜单关掉其他标签" src="assets/drag-reorder.gif" width="800">
 
 右键标签是标签操作。鼠标移到「对话选项…」上，旁边会弹出侧栏原本的菜单，标签菜单也还开着：
 

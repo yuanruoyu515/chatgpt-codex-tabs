@@ -108,6 +108,7 @@
     #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible):not(:disabled){background:var(--rt-hover);outline:none}
     #ruoyu-chat-tabs-menu button:disabled{color:var(--rt-muted)}
     #ruoyu-chat-tabs-menu p{margin:2px 10px 6px;color:var(--rt-muted);font-size:12px}
+    html.rt-dragging,html.rt-dragging *{-webkit-app-region:no-drag!important}
     [data-ruoyu-tabs-space]{padding-top:40px!important;box-sizing:border-box!important}
     @media(prefers-reduced-motion:reduce){#ruoyu-chat-tabs *{transition:none!important}}
     @media(forced-colors:active){#ruoyu-chat-tabs .rt-active{outline:1px solid Highlight}}
@@ -268,23 +269,32 @@
   }, opts);
   // Drag to reorder, with pointer events rather than HTML drag and drop: no ghost image, the
   // tab follows the pointer, the others slide aside, and nothing can be dropped into the composer.
+  // A tab must never stay stuck to the pointer, so a drag also ends when the release is missed:
+  // the pointer comes back with no button down, pointer capture is lost, or the window loses focus.
   let drag = null;
   list.addEventListener('pointerdown', e => {
-    // A press released outside the bar without moving leaves a stale, unmoved drag: replace it.
-    if (e.button !== 0 || drag?.moved || e.target.closest('.rt-close')) return;
+    if (drag) endDrag(true);  // the release of the previous press never arrived
+    // Ctrl-click is a right-click on macOS: leave it to the contextmenu handler.
+    if (e.button !== 0 || e.ctrlKey || e.target.closest('.rt-close')) return;
     const item = e.target.closest('.rt-item'); if (!item) return;
     // Select on press, as browsers do; dragging still works from here.
     go(item.dataset.id);
     drag = { id: item.dataset.id, item, pointerId: e.pointerId, startX: e.clientX, x: e.clientX, moved: false };
+    // Capture from the press on, so the release reaches us wherever the pointer is let go.
+    try { list.setPointerCapture(e.pointerId); } catch {}
   }, opts);
   list.addEventListener('pointermove', e => {
     if (!drag || e.pointerId !== drag.pointerId) return;
+    if (!(e.buttons & 1)) return endDrag(true);
     drag.x = e.clientX;
     if (!drag.moved) { if (Math.abs(drag.x - drag.startX) < 5) return; startDrag(); }
     dragUpdate();
   }, opts);
   list.addEventListener('pointerup', e => { if (drag && e.pointerId === drag.pointerId) endDrag(true); }, opts);
   list.addEventListener('pointercancel', e => { if (drag && e.pointerId === drag.pointerId) endDrag(false); }, opts);
+  list.addEventListener('lostpointercapture', e => { if (drag && e.pointerId === drag.pointerId) endDrag(true); }, opts);
+  // Fallback for a release that bypasses the list despite capture.
+  window.addEventListener('pointerup', e => { if (drag && e.pointerId === drag.pointerId) endDrag(true); }, { capture: true, signal: abort.signal });
   document.addEventListener('keydown', e => {
     if (drag?.moved && e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); endDrag(false); }
   }, { capture: true, signal: abort.signal });
@@ -338,7 +348,9 @@
     d.width = d.widths[d.from]; d.end = d.lefts.at(-1) + d.widths.at(-1);
     d.gap = items.length > 1 ? d.lefts[1] - d.lefts[0] - d.widths[0] : 0;
     d.scroll0 = list.scrollLeft;
-    try { list.setPointerCapture(d.pointerId); } catch {}
+    // The titlebar is a window drag region: the system takes mouse events over it, and a
+    // release there would never reach the page. Switch drag regions off until the drop.
+    document.documentElement.classList.add('rt-dragging');
     bar.classList.add('rt-reordering'); d.item.classList.remove('rt-settle'); d.item.classList.add('rt-lifted');
     const edge = 36, step = () => {
       if (drag !== d) return;
@@ -371,9 +383,12 @@
   }
   function endDrag(commit) {
     const d = drag; drag = null;
-    if (!d?.moved) return;
-    cancelAnimationFrame(d.raf);
+    if (!d) return;
+    // Clear `drag` first: releasing capture fires lostpointercapture, which must find nothing to end.
     try { list.releasePointerCapture(d.pointerId); } catch {}
+    if (!d.moved) return;
+    cancelAnimationFrame(d.raf);
+    document.documentElement.classList.remove('rt-dragging');
     const moved = commit && d.to !== d.from;
     const before = d.item.getBoundingClientRect().left;
     if (moved) {
@@ -391,7 +406,8 @@
     d.item.style.transform = `translateX(${before - d.item.getBoundingClientRect().left}px)`;
     d.item.offsetWidth;
     d.item.classList.add('rt-settle'); d.item.style.transform = '';
-    const done = () => d.items.forEach(it => { if (drag?.item !== it) it.classList.remove('rt-settle', 'rt-lifted'); });
+    // A plain click on the same tab within the settle time must not leave it looking lifted.
+    const done = () => d.items.forEach(it => { if (!(drag?.moved && drag.item === it)) it.classList.remove('rt-settle', 'rt-lifted'); });
     setTimeout(done, 220);
     refresh();
   }
@@ -426,6 +442,6 @@
     }
   },opts);
   const interval = setInterval(refresh,1500);
-  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); menu.remove(); style.remove(); delete window.__ruoyuTabs; } };
+  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; document.documentElement.classList.remove('rt-dragging'); disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); menu.remove(); style.remove(); delete window.__ruoyuTabs; } };
   refresh();
 })

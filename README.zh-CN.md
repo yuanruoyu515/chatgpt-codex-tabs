@@ -43,8 +43,8 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 右键标签是标签操作。鼠标移到「对话选项…」上，旁边会弹出侧栏原本的菜单，标签菜单也还开着：
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-dark.png">
-  <img alt="标签的右键菜单：关闭标签、关闭其他标签、关闭右侧标签、对话选项…；旁边是 App 自己的对话菜单，有重命名、置顶、归档、永久删除等" src="assets/tab-menu-light.png" width="800">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-zh-dark.png">
+  <img alt="标签的右键菜单：关闭标签、关闭其他标签、关闭右侧标签、对话选项…；旁边是 App 自己的对话菜单，有重命名、置顶、归档、永久删除等" src="assets/tab-menu-zh-light.png" width="800">
 </picture>
 
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> 需要什么

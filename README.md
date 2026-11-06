@@ -24,7 +24,7 @@ Nothing inside the app bundle changes. A small background script injects the tab
 - Click a tab, or press <kbd>⌘1</kbd> to <kbd>⌘8</kbd>, to switch. <kbd>⌘9</kbd> jumps to the last tab.
 - Drag a tab to move it. The other tabs slide out of the way; <kbd>Esc</kbd> cancels. The tab drops wherever you let go, even over the title bar, so it never stays stuck to the pointer.
 - Right-click a tab to close it, close the other tabs, or close the tabs to its right. <kbd>Shift</kbd><kbd>F10</kbd> opens the same menu from the keyboard.
-- Hover **对话选项…** ("thread options") in that menu and the sidebar's own menu opens beside it: rename, pin, archive, open in new window and the rest.
+- Hover **Thread options…** in that menu and the sidebar's own menu opens beside it: rename, pin, archive, open in new window and the rest.
 - A blue dot marks a thread that is still running.
 - <kbd>×</kbd> closes the tab only. The thread is not deleted or archived. Middle-click works too.
 - <kbd>+</kbd> starts a new chat.
@@ -41,11 +41,11 @@ Drag a tab and the others slide out of the way.
 
 <img alt="A tab dragged to a new position while the other tabs move aside" src="assets/drag-reorder.gif" width="800">
 
-Right-click a tab for the tab actions. Hover **对话选项…** and the sidebar's own menu opens next to it, while the tab menu stays open.
+Right-click a tab for the tab actions. Hover **Thread options…** and the sidebar's own menu opens next to it, while the tab menu stays open.
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-dark.png">
-  <img alt="A tab's right-click menu with close tab, close other tabs, close tabs to the right and 对话选项…, and the app's thread menu open beside it with rename, pin, archive and delete" src="assets/tab-menu-light.png" width="800">
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-en-dark.png">
+  <img alt="A tab's right-click menu with close tab, close other tabs, close tabs to the right and Thread options…, and the app's thread menu open beside it with rename, pin, archive and delete" src="assets/tab-menu-en-light.png" width="800">
 </picture>
 
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> Requirements
@@ -100,7 +100,7 @@ Set up https://github.com/yuanruoyu515/chatgpt-codex-tabs on this Mac. Follow AG
 2. `src/inject.py` runs as a LaunchAgent. It watches `ps` for the app process with that flag, reads `http://127.0.0.1:<port>/json` and finds the main window (`app://-/index.html`).
 3. It sends `src/renderer.js` over the DevTools protocol with `Runtime.evaluate`. The script is versioned by its own hash, so a reload or a changed `renderer.js` gets re-injected within a few seconds and an unchanged one is left alone.
 4. `renderer.js` reads the sidebar rows (`data-app-action-sidebar-thread-*`) to build tabs. It copies the agent logo from CodexHost's `data-codexhost-sidebar-agent-icon` span and caches it per agent in `localStorage`, so a tab keeps its logo while its sidebar row is collapsed or scrolled away.
-5. Switching tabs clicks the sidebar row, or falls back to the app's own `open-in-main-window` message. Right-clicking a tab opens the tab bar's own menu. Hovering its **对话选项…** item sends a right-click to that row, so the app opens its own menu. That menu is native, so the tab actions can't be added to it. It opens on hover rather than on click because macOS puts a native menu under the pointer when it opens right after a click, whatever position the app asks for.
+5. Switching tabs clicks the sidebar row, or falls back to the app's own `open-in-main-window` message. Right-clicking a tab opens the tab bar's own menu. Hovering its **Thread options…** item sends a right-click to that row, so the app opens its own menu. That menu is native, so the tab actions can't be added to it. It opens on hover rather than on click because macOS puts a native menu under the pointer when it opens right after a click, whatever position the app asks for.
 
 I tried patching first: copy the app, edit `app.asar`, re-sign it ad hoc. macOS refused to launch it (spawn error 163 from restricted entitlements, then library validation failing on mixed Team IDs), and every official update would have meant doing it all again. Runtime injection skips all of that, and I'd pick it again.
 
@@ -116,7 +116,7 @@ A tab bar that is already on screen goes away on the next reload or app restart.
 ## <img src="assets/icons/warning-circle.svg" width="20" height="20" align="top"> Limits
 
 - Local Codex threads only. Remote hosts, cloud tasks and plain ChatGPT chats do not get tabs yet.
-- **对话选项…** needs the thread's row in the sidebar. If the thread sits in a collapsed project, the tab menu can only close tabs.
+- **Thread options…** needs the thread's row in the sidebar. If the thread sits in a collapsed project, the tab menu can only close tabs.
 - Only the main window has a tab bar. Windows opened with "Open in new window" do not.
 - Without CodexHost there is no debug port, so no tab bar. Without CodexHost's sidebar icons, tabs show titles only.
 - It depends on the app's DOM attributes. If an update renames `data-app-action-sidebar-thread-*` or the `open-in-main-window` message, the bar stops appearing until the selectors are updated. `doctor.py` will still show the injector running.

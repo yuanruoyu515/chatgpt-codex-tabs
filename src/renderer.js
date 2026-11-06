@@ -7,7 +7,46 @@
   const store = localStorage;
   const key = 'ruoyu-horizontal-tabs:v1';
   const attr = 'data-app-action-sidebar-thread-';
-  const MAX_TABS = 30, UNTITLED = '未命名对话';
+  const MAX_TABS = 30;
+  // UI strings follow the app's own language: it sets <html lang> from the language chosen in
+  // its settings. Languages without a table here fall back to English.
+  // Keys: bar, add, closeTip, closeLabel, untitled, close, closeOthers, closeRight, options, noRow.
+  const STRINGS = {
+    en: ['Open threads', 'New chat', 'Close tab (the thread is kept)', 'Close tab: ', 'Untitled thread', 'Close tab', 'Close other tabs', 'Close tabs to the right', 'Thread options…', 'Not in the sidebar'],
+    'zh-CN': ['打开的对话', '新建对话', '关闭标签（不会删除对话）', '关闭标签：', '未命名对话', '关闭标签', '关闭其他标签', '关闭右侧标签', '对话选项…', '侧栏里没有这个对话'],
+    'zh-TW': ['已開啟的對話', '新增對話', '關閉分頁（不會刪除對話）', '關閉分頁：', '未命名對話', '關閉分頁', '關閉其他分頁', '關閉右側分頁', '對話選項…', '側邊欄裡沒有這個對話'],
+    ja: ['開いているスレッド', '新しいチャット', 'タブを閉じる（スレッドは削除されません）', 'タブを閉じる：', '無題のスレッド', 'タブを閉じる', '他のタブを閉じる', '右側のタブを閉じる', 'スレッドのオプション…', 'サイドバーにありません'],
+    ko: ['열린 스레드', '새 채팅', '탭 닫기(스레드는 삭제되지 않음)', '탭 닫기: ', '제목 없는 스레드', '탭 닫기', '다른 탭 닫기', '오른쪽 탭 닫기', '스레드 옵션…', '사이드바에 없음'],
+    es: ['Conversaciones abiertas', 'Nuevo chat', 'Cerrar pestaña (la conversación no se elimina)', 'Cerrar pestaña: ', 'Conversación sin título', 'Cerrar pestaña', 'Cerrar las demás pestañas', 'Cerrar pestañas a la derecha', 'Opciones de la conversación…', 'No está en la barra lateral'],
+    fr: ['Conversations ouvertes', 'Nouveau chat', 'Fermer l’onglet (la conversation est conservée)', 'Fermer l’onglet : ', 'Conversation sans titre', 'Fermer l’onglet', 'Fermer les autres onglets', 'Fermer les onglets à droite', 'Options de la conversation…', 'Absente de la barre latérale'],
+    de: ['Geöffnete Threads', 'Neuer Chat', 'Tab schließen (Thread bleibt erhalten)', 'Tab schließen: ', 'Unbenannter Thread', 'Tab schließen', 'Andere Tabs schließen', 'Tabs rechts schließen', 'Thread-Optionen…', 'Nicht in der Seitenleiste'],
+    it: ['Conversazioni aperte', 'Nuova chat', 'Chiudi scheda (la conversazione resta)', 'Chiudi scheda: ', 'Conversazione senza titolo', 'Chiudi scheda', 'Chiudi le altre schede', 'Chiudi le schede a destra', 'Opzioni conversazione…', 'Non presente nella barra laterale'],
+    pt: ['Conversas abertas', 'Novo chat', 'Fechar aba (a conversa não é excluída)', 'Fechar aba: ', 'Conversa sem título', 'Fechar aba', 'Fechar outras abas', 'Fechar abas à direita', 'Opções da conversa…', 'Não está na barra lateral'],
+    'pt-PT': ['Conversas abertas', 'Novo chat', 'Fechar separador (a conversa não é eliminada)', 'Fechar separador: ', 'Conversa sem título', 'Fechar separador', 'Fechar os outros separadores', 'Fechar separadores à direita', 'Opções da conversa…', 'Não está na barra lateral'],
+    nl: ['Geopende gesprekken', 'Nieuwe chat', 'Tabblad sluiten (gesprek blijft bewaard)', 'Tabblad sluiten: ', 'Naamloos gesprek', 'Tabblad sluiten', 'Andere tabbladen sluiten', 'Tabbladen rechts sluiten', 'Gespreksopties…', 'Niet in de zijbalk'],
+    pl: ['Otwarte wątki', 'Nowy czat', 'Zamknij kartę (wątek pozostaje)', 'Zamknij kartę: ', 'Wątek bez tytułu', 'Zamknij kartę', 'Zamknij pozostałe karty', 'Zamknij karty po prawej', 'Opcje wątku…', 'Brak na pasku bocznym'],
+    ru: ['Открытые чаты', 'Новый чат', 'Закрыть вкладку (чат не удаляется)', 'Закрыть вкладку: ', 'Чат без названия', 'Закрыть вкладку', 'Закрыть другие вкладки', 'Закрыть вкладки справа', 'Параметры чата…', 'Нет на боковой панели'],
+    uk: ['Відкриті чати', 'Новий чат', 'Закрити вкладку (чат не видаляється)', 'Закрити вкладку: ', 'Чат без назви', 'Закрити вкладку', 'Закрити інші вкладки', 'Закрити вкладки праворуч', 'Параметри чату…', 'Немає на бічній панелі'],
+    tr: ['Açık sohbetler', 'Yeni sohbet', 'Sekmeyi kapat (sohbet silinmez)', 'Sekmeyi kapat: ', 'Adsız sohbet', 'Sekmeyi kapat', 'Diğer sekmeleri kapat', 'Sağdaki sekmeleri kapat', 'Sohbet seçenekleri…', 'Kenar çubuğunda yok'],
+    vi: ['Cuộc trò chuyện đang mở', 'Cuộc trò chuyện mới', 'Đóng thẻ (không xóa cuộc trò chuyện)', 'Đóng thẻ: ', 'Cuộc trò chuyện chưa đặt tên', 'Đóng thẻ', 'Đóng các thẻ khác', 'Đóng các thẻ bên phải', 'Tùy chọn cuộc trò chuyện…', 'Không có trong thanh bên'],
+    id: ['Percakapan terbuka', 'Chat baru', 'Tutup tab (percakapan tidak dihapus)', 'Tutup tab: ', 'Percakapan tanpa judul', 'Tutup tab', 'Tutup tab lain', 'Tutup tab di sebelah kanan', 'Opsi percakapan…', 'Tidak ada di bilah samping'],
+    th: ['แชทที่เปิดอยู่', 'แชทใหม่', 'ปิดแท็บ (แชทจะไม่ถูกลบ)', 'ปิดแท็บ: ', 'แชทที่ไม่มีชื่อ', 'ปิดแท็บ', 'ปิดแท็บอื่น', 'ปิดแท็บทางขวา', 'ตัวเลือกแชท…', 'ไม่อยู่ในแถบด้านข้าง'],
+  };
+  const KEYS = ['bar', 'add', 'closeTip', 'closeLabel', 'untitled', 'close', 'closeOthers', 'closeRight', 'options', 'noRow'];
+  // Titles stored by older versions for threads without a name; shown in the current language now.
+  const OLD_UNTITLED = new Set(['未命名对话']);
+  let str = {}, lang = '';
+  function localize() {
+    const tag = document.documentElement.lang || navigator.language || 'en';
+    if (tag === lang) return false;
+    lang = tag;
+    const [base, region = ''] = tag.split('-'), r = region.toUpperCase();
+    const pick = base === 'zh' ? (/^(TW|HK|MO|HANT)$/.test(r) || /hant/i.test(tag) ? 'zh-TW' : 'zh-CN')
+      : base === 'pt' && r === 'PT' ? 'pt-PT' : STRINGS[base] ? base : 'en';
+    str = Object.fromEntries(KEYS.map((k, i) => [k, STRINGS[pick][i]]));
+    return true;
+  }
+  localize();
   // A thread started in this session keeps a client-side id ("client-new-thread:<uuid>") on its row.
   const ID = /^(?:client-new-thread:)?[\w-]{1,100}$/, CLIENT = 'client-new-thread:';
   const abort = new AbortController();
@@ -17,6 +56,7 @@
   let tabs = [], active = '', appActive = '', pending = null, scrolledTo = '';
   let disposed = false, timer = 0, suppressed = '', saved = '';
   try { tabs = JSON.parse(store.getItem(key) || '[]').filter(valid).slice(-MAX_TABS).map(stored); } catch {}
+  for (const tab of tabs) if (OLD_UNTITLED.has(tab.title)) tab.title = '';
   function valid(t) { return t && typeof t.id === 'string' && ID.test(t.id) && typeof t.title === 'string' && (t.agent === undefined || /^[\w-]{1,40}$/.test(t.agent)); }
   function stored({ id, title, agent }) { return agent ? { id, title, agent } : { id, title }; }
   function visible(el) { return el && !el.closest('[data-app-shell-active-page="false"], [inert]') && el.getBoundingClientRect().width > 0; }
@@ -91,7 +131,7 @@
     #ruoyu-chat-tabs.rt-reordering .rt-close{opacity:0!important}
     #ruoyu-chat-tabs button{font:inherit;color:inherit;background:transparent;border:0;padding:0;margin:0;cursor:default;-webkit-app-region:no-drag}
     #ruoyu-chat-tabs button:focus-visible{outline:2px solid var(--rt-ring);outline-offset:-2px;border-radius:var(--radius-sm,7px)}
-    #ruoyu-chat-tabs .rt-open{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-align:left}
+    #ruoyu-chat-tabs .rt-open{flex:1;min-width:0;height:100%;display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-align:start}
     #ruoyu-chat-tabs .rt-agent{flex:none;display:inline-flex!important;width:14px!important;height:14px!important}
     #ruoyu-chat-tabs .rt-item:not(.rt-active):not(:hover) .rt-agent{opacity:.85}
     #ruoyu-chat-tabs .rt-label{overflow:hidden;text-overflow:ellipsis}
@@ -104,7 +144,7 @@
     #ruoyu-chat-tabs .rt-add:hover{background:var(--rt-hover);color:var(--rt-fg)}
     #ruoyu-chat-tabs-menu{position:fixed;z-index:1000;min-width:180px;padding:5px;box-sizing:border-box;border-radius:12px;border:1px solid var(--rt-line);background:var(--rt-bg,Canvas);color:var(--rt-fg);box-shadow:0 8px 28px rgb(0 0 0/.16);font:430 13px/18px var(--font-sans,-apple-system,BlinkMacSystemFont,sans-serif);user-select:none;-webkit-app-region:no-drag}
     #ruoyu-chat-tabs-menu[hidden]{display:none}
-    #ruoyu-chat-tabs-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:default}
+    #ruoyu-chat-tabs-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:5px 10px;border:0;border-radius:7px;background:transparent;color:inherit;font:inherit;text-align:start;cursor:default}
     #ruoyu-chat-tabs-menu .rt-chevron{color:var(--rt-muted)}
     #ruoyu-chat-tabs-menu button:is(:hover,:focus-visible,.rt-expanded):not(:disabled){background:var(--rt-hover);outline:none}
     #ruoyu-chat-tabs-menu button:disabled{color:var(--rt-muted)}
@@ -115,12 +155,19 @@
     @media(forced-colors:active){#ruoyu-chat-tabs .rt-active{outline:1px solid Highlight}}
   `;
   const bar = document.createElement('nav');
-  bar.id = 'ruoyu-chat-tabs'; bar.setAttribute('aria-label', '打开的对话');
+  bar.id = 'ruoyu-chat-tabs';
   const list = document.createElement('div'); list.className = 'rt-list'; list.setAttribute('role','tablist'); bar.append(list);
-  const add = document.createElement('button'); add.className = 'rt-add'; add.innerHTML = icon.plus; add.title = '新建对话'; add.setAttribute('aria-label', '新建对话');
+  const add = document.createElement('button'); add.className = 'rt-add'; add.innerHTML = icon.plus;
   add.addEventListener('click', () => navigate('/'), opts); bar.append(add);
   const menu = document.createElement('div'); menu.id = 'ruoyu-chat-tabs-menu'; menu.setAttribute('role', 'menu'); menu.hidden = true;
   document.head.append(style); document.body.append(bar, menu);
+  function labels() {
+    bar.setAttribute('aria-label', str.bar); add.title = str.add; add.setAttribute('aria-label', str.add);
+  }
+  labels();
+  // Follow a language change in the app's settings without a reload.
+  const langWatch = new MutationObserver(() => { if (localize()) { labels(); hideMenu(); render(); } });
+  langWatch.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] });
   let spaced, background = '';
   // Follows the main surface when the sidebar is dragged or toggled, without waiting for the next poll.
   const resized = new ResizeObserver(() => layout());
@@ -173,9 +220,9 @@
     const dot = document.createElement('span'); dot.className = 'rt-dot'; dot.hidden = true;
     const label = document.createElement('span'); label.className = 'rt-label';
     open.append(dot, label);
-    const x = document.createElement('button'); x.className = 'rt-close'; x.innerHTML = icon.close; x.title = '关闭标签（不会删除对话）';
+    const x = document.createElement('button'); x.className = 'rt-close'; x.innerHTML = icon.close;
     item.append(open, x);
-    n = { item, open, dot, label, x, title: null, kind: null, agentName: '' }; nodes.set(id, n);
+    n = { item, open, dot, label, x, title: null, lang: '', kind: null, agentName: '' }; nodes.set(id, n);
     return n;
   }
   function shortcut(i) { return i < 8 ? `⌘${i + 1}` : i === tabs.length - 1 ? '⌘9' : ''; }
@@ -183,10 +230,10 @@
     const ids = new Set(tabs.map(t => t.id));
     for (const [id, n] of nodes) if (!ids.has(id)) { n.item.remove(); nodes.delete(id); }
     tabs.forEach((tab, i) => {
-      const n = node(tab.id), title = tab.title || UNTITLED, on = tab.id === active;
-      if (n.title !== title) {
-        n.title = title; n.label.textContent = title;
-        n.open.setAttribute('aria-label', title); n.x.setAttribute('aria-label', `关闭标签：${title}`);
+      const n = node(tab.id), title = tab.title || str.untitled, on = tab.id === active;
+      if (n.title !== title || n.lang !== lang) {
+        n.title = title; n.lang = lang; n.label.textContent = title; n.x.title = str.closeTip;
+        n.open.setAttribute('aria-label', title); n.x.setAttribute('aria-label', str.closeLabel + title);
       }
       const kind = tab.agent || '';
       if (n.kind !== kind) {
@@ -237,7 +284,7 @@
     for (const t of tabs) {
       let row = byId.get(t.id);
       // After a reload the row carries the thread's real id; follow it by title, once the sidebar has loaded.
-      if (!row && t.id.startsWith(CLIENT) && byId.size) {
+      if (!row && t.title && t.id.startsWith(CLIENT) && byId.size) {
         row = [...byId.values()].find(r => r.getAttribute(attr + 'title') === t.title && !tabs.some(x => x.id === rowId(r)));
         if (row) t.id = rowId(row);
       }
@@ -245,7 +292,7 @@
       t.running = !!row?.querySelector('[data-loading-indicator]');
     }
     if (id && id !== suppressed && ID.test(id) && !tabs.some(t => t.id === id)) {
-      const agent = agentOf(selected), title = selected?.getAttribute(attr+'title') || UNTITLED;
+      const agent = agentOf(selected), title = selected?.getAttribute(attr+'title') || '';
       tabs.push(agent ? { id, title, agent } : { id, title });
       if (tabs.length > MAX_TABS) tabs.shift();
     }
@@ -322,11 +369,11 @@
     const closeRight = () => { const i = tabs.findIndex(t => t.id === id); if (i >= 0) closeOthers(id, tabs.slice(i + 1)); };
     const closeOther = () => { if (tabs.some(t => t.id === id)) closeOthers(id, tabs.filter(t => t.id !== id)); };
     const entries = [
-      ['关闭标签', () => close(id), true],
-      ['关闭其他标签', closeOther, tabs.length > 1],
-      ['关闭右侧标签', closeRight, at < tabs.length - 1],
+      [str.close, () => close(id), true],
+      [str.closeOthers, closeOther, tabs.length > 1],
+      [str.closeRight, closeRight, at < tabs.length - 1],
       null,
-      hasRow ? ['对话选项…', b => openThreadMenu(id, b), true, 'sub'] : ['侧栏里没有这个对话', null, false],
+      hasRow ? [str.options, b => openThreadMenu(id, b), true, 'sub'] : [str.noRow, null, false],
     ];
     menu.replaceChildren(...entries.map(entry => {
       if (!entry) { const hr = document.createElement('hr'); hr.setAttribute('role', 'separator'); return hr; }
@@ -510,6 +557,6 @@
     }
   },opts);
   const interval = setInterval(refresh,1500);
-  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; document.documentElement.classList.remove('rt-dragging'); disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); menu.remove(); style.remove(); delete window.__ruoyuTabs; } };
+  window.__ruoyuTabs = { dispose() { if (drag) cancelAnimationFrame(drag.raf); drag = null; document.documentElement.classList.remove('rt-dragging'); disposed=true; clearInterval(interval); clearTimeout(timer); observer.disconnect(); langWatch.disconnect(); resized.disconnect(); abort.abort(); spaced?.removeAttribute('data-ruoyu-tabs-space'); bar.remove(); menu.remove(); style.remove(); delete window.__ruoyuTabs; } };
   refresh();
 })

@@ -22,8 +22,9 @@ Nothing inside the app bundle changes. A small background script injects the tab
 
 - Open a thread in the sidebar and it gets a tab.
 - Click a tab, or press <kbd>⌘1</kbd> to <kbd>⌘8</kbd>, to switch. <kbd>⌘9</kbd> jumps to the last tab.
-- Drag a tab to move it. The other tabs slide out of the way; <kbd>Esc</kbd> cancels.
-- Right-click a tab to close it, close the other tabs, or close the tabs to its right. Hover **对话选项…** ("thread options") in the same menu and the sidebar's own menu opens beside it: rename, pin, archive, open in new window and the rest.
+- Drag a tab to move it. The other tabs slide out of the way; <kbd>Esc</kbd> cancels. The tab drops wherever you let go, even over the title bar, so it never stays stuck to the pointer.
+- Right-click a tab to close it, close the other tabs, or close the tabs to its right. <kbd>Shift</kbd><kbd>F10</kbd> opens the same menu from the keyboard.
+- Hover **对话选项…** ("thread options") in that menu and the sidebar's own menu opens beside it: rename, pin, archive, open in new window and the rest.
 - A blue dot marks a thread that is still running.
 - <kbd>×</kbd> closes the tab only. The thread is not deleted or archived. Middle-click works too.
 - <kbd>+</kbd> starts a new chat.
@@ -39,9 +40,12 @@ Drag a tab and the others slide out of the way.
 
 <img alt="A tab dragged to a new position while the other tabs move aside" src="assets/drag-reorder.gif" width="800">
 
-Hover **对话选项…** in a tab's right-click menu and the sidebar's own menu opens next to it.
+Right-click a tab for the tab actions. Hover **对话选项…** and the sidebar's own menu opens next to it, while the tab menu stays open.
 
-<img alt="Right-click menu on a tab with rename, pin, mark as unread, fork, share, open in new window, archive and delete" src="assets/context-menu.png" width="642">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-dark.png">
+  <img alt="A tab's right-click menu with close tab, close other tabs, close tabs to the right and 对话选项…, and the app's thread menu open beside it with rename, pin, archive and delete" src="assets/tab-menu-light.png" width="800">
+</picture>
 
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> Requirements
 

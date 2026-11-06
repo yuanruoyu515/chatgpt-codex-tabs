@@ -21,8 +21,9 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 
 - 在侧栏点开一个对话，上方就多一个标签
 - 点标签，或按 <kbd>⌘1</kbd> 到 <kbd>⌘8</kbd> 切换；<kbd>⌘9</kbd> 跳到最后一个
-- 拖动标签调整顺序，其他标签会让开位置；按 <kbd>Esc</kbd> 取消
-- 右键标签可以关闭这个标签、关闭其他标签、关闭右侧标签；鼠标移到菜单里的「对话选项…」上，旁边会弹出侧栏原本的菜单：重命名、置顶、归档、在新窗口中打开等
+- 拖动标签调整顺序，其他标签会让开位置；按 <kbd>Esc</kbd> 取消。在哪里松手，标签就落在哪里，标题栏上也一样，不会再粘在鼠标上
+- 右键标签可以关闭这个标签、关闭其他标签、关闭右侧标签；键盘上按 <kbd>Shift</kbd><kbd>F10</kbd> 也能打开
+- 鼠标移到菜单里的「对话选项…」上，旁边会弹出侧栏原本的菜单：重命名、置顶、归档、在新窗口中打开等
 - 还在运行的对话，标签上有个蓝点
 - 点 <kbd>×</kbd> 只关标签，对话不会被删除或归档；鼠标中键也能关
 - 点 <kbd>+</kbd> 新建对话
@@ -38,9 +39,12 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 
 <img alt="拖动一个标签换位置，其他标签跟着让开" src="assets/drag-reorder.gif" width="800">
 
-在标签右键菜单里把鼠标移到「对话选项…」上，旁边出来的是侧栏原本的菜单：
+右键标签是标签操作。鼠标移到「对话选项…」上，旁边会弹出侧栏原本的菜单，标签菜单也还开着：
 
-<img alt="标签上的右键菜单：重命名、置顶、标记为未读、分叉、分享、在新窗口中打开、归档、永久删除等" src="assets/context-menu.png" width="642">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/tab-menu-dark.png">
+  <img alt="标签的右键菜单：关闭标签、关闭其他标签、关闭右侧标签、对话选项…；旁边是 App 自己的对话菜单，有重命名、置顶、归档、永久删除等" src="assets/tab-menu-light.png" width="800">
+</picture>
 
 ## <img src="assets/icons/puzzle-piece.svg" width="20" height="20" align="top"> 需要什么
 

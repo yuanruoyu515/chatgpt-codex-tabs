@@ -333,7 +333,15 @@
       const [label, run, enabled, kind] = entry;
       const b = document.createElement('button'); b.setAttribute('role', 'menuitem'); b.textContent = label; b.disabled = !enabled; b.tabIndex = -1;
       if (kind === 'sub') { b.setAttribute('aria-haspopup', 'menu'); b.setAttribute('aria-expanded', 'false'); b.append(Object.assign(document.createElement('span'), { className: 'rt-chevron', textContent: '›' })); }
-      if (run && kind === 'sub') b.addEventListener('click', () => run(b));
+      if (run && kind === 'sub') {
+        // macOS puts a native menu under the pointer when it is opened right after a mouse click,
+        // whatever position is asked for. Opened on hover, as submenus are, it sits beside the item.
+        let hover = 0;
+        b.addEventListener('pointerenter', () => { clearTimeout(hover); hover = setTimeout(() => { if (!nativeAt && b.isConnected) run(b); }, 120); });
+        b.addEventListener('pointerleave', () => clearTimeout(hover));
+        b.addEventListener('click', () => { clearTimeout(hover); if (!nativeAt) run(b); });
+        b.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); if (!nativeAt) run(b); } });
+      }
       else if (run) b.addEventListener('click', () => {
         const back = menu.contains(document.activeElement), from = menuFrom;
         hideMenu(); run(); if (back) { menuFrom = from; restoreFocus(); }

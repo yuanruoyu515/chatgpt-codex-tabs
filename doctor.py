@@ -8,7 +8,14 @@ import importlib.util, os, pathlib, plistlib, shutil, subprocess, sys
 HOME = pathlib.Path.home()
 DEST = HOME / 'Library/Application Support/chatgpt-tabs-inject'
 LABEL = 'com.ruoyu.chatgpt-tabs.inject'
+AGENT = HOME / f'Library/LaunchAgents/{LABEL}.plist'
 ok_all = True
+
+try:
+    with open(AGENT, 'rb') as f:
+        standalone = '--standalone' in plistlib.load(f).get('ProgramArguments', [])
+except (OSError, plistlib.InvalidFileException):
+    standalone = False
 
 def line(ok, name, detail=''):
     global ok_all
@@ -27,8 +34,12 @@ line(bool(apps), 'Desktop app', ', '.join(f'{p.name} {app_version(p)}' for p in 
 
 host = pathlib.Path('/Applications/codexhost.app')
 cli = shutil.which('codexhost')
-line(host.exists() or bool(cli), 'CodexHost',
-     (f'codexhost.app {app_version(host)}' if host.exists() else '') + (f' cli {cli}' if cli else '') or 'not installed')
+found = (f'codexhost.app {app_version(host)}' if host.exists() else '') + (f' cli {cli}' if cli else '')
+print(f"[ok] Mode: {'standalone (no CodexHost needed)' if standalone else 'with CodexHost'}")
+if standalone:
+    print(f"[ok] CodexHost: {found or 'not installed'} (optional in standalone mode)")
+else:
+    line(bool(found), 'CodexHost', found or 'not installed; install it, or run python3 install.py --standalone')
 
 state = subprocess.run(['launchctl', 'print', f'gui/{os.getuid()}/{LABEL}'], capture_output=True, text=True)
 running = state.returncode == 0 and 'state = running' in state.stdout
@@ -43,7 +54,9 @@ if (DEST / 'inject.py').exists():
     spec.loader.exec_module(inject)
     ports = inject.ports()
     line(bool(ports), 'App started with a debug port',
-         ', '.join(map(str, sorted(ports))) or 'none; open the app through CodexHost (codexhost launch)')
+         ', '.join(map(str, sorted(ports))) or
+         ('none; quit the app and open it again, the injector reopens it with the port' if standalone
+          else 'none; open the app through CodexHost (codexhost launch)'))
     live = 0
     for port in ports:
         try:

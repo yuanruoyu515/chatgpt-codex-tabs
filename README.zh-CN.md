@@ -6,16 +6,21 @@
 <p>
   <img alt="macOS" src="https://img.shields.io/badge/platform-macOS-18181B?logo=apple&logoColor=white">
   <img alt="Python 3，只用标准库" src="https://img.shields.io/badge/Python_3-stdlib_only-3B82F6?logo=python&logoColor=white">
-  <a href="https://github.com/BytePioneer-AI/codex-host"><img alt="需要 CodexHost" src="https://img.shields.io/badge/needs-CodexHost-3B82F6"></a>
+  <a href="https://github.com/BytePioneer-AI/codex-host"><img alt="有没有 CodexHost 都能用" src="https://img.shields.io/badge/CodexHost-optional-3B82F6"></a>
   <a href="LICENSE"><img alt="MIT 许可" src="https://img.shields.io/badge/license-MIT-18181B"></a>
   <a href="https://www.threads.com/@realtimyry"><img alt="Threads @realtimyry" src="https://img.shields.io/badge/Threads-@realtimyry-18181B?logo=threads&logoColor=white"></a>
 </p>
 
 [English](README.md) · **简体中文** · [给 AI Agent 的配置说明](AGENTS.md)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
+  <img alt="Codex Tabs 的小鸭子，抱着一个蓝色的标签窗口" src="assets/brand/logo.svg" width="120" align="right">
+</picture>
+
 Codex 桌面版的对话都放在左侧侧栏。同时开四五个对话的时候，我总在侧栏里来回翻，找刚才那个。于是做了这个：在对话区上方加一排标签，用法跟浏览器差不多，每个标签前面还有这个对话所用 Agent 的 logo（Codex、Claude Code、DeepSeek、WorkBuddy 等）。
 
-App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://github.com/BytePioneer-AI/codex-host) 本来就会开的本地调试端口，在运行时把标签栏注入进去。官方签名保持原样，App 更新后照常能用。
+App 包里的东西一点没改。一个后台小脚本通过本地调试端口，在运行时把标签栏注入进去。官方签名保持原样，App 更新后照常能用。这个端口有两种来路：已经在用 [CodexHost](https://github.com/BytePioneer-AI/codex-host) 的，端口由它来开，标签上还能显示各个 Agent 的 logo；没装 CodexHost 的，用独立安装，你从 Dock 打开 App 时，脚本会把刚启动的 App 关掉，再带着端口重新打开。
 
 ## <img src="assets/icons/cursor-click.svg" width="20" height="20" align="top"> 功能
 
@@ -27,7 +32,7 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 - 还在运行的对话，标签上有个蓝点
 - 点 <kbd>×</kbd> 只关标签，对话不会被删除或归档；鼠标中键也能关
 - 点 <kbd>+</kbd> 新建对话
-- 标签上的 logo 就是 CodexHost 画在侧栏里的那个图标，鼠标悬停能看到 Agent 名字
+- 装了 CodexHost 时，标签上的 logo 就是 CodexHost 画在侧栏里的那个图标，鼠标悬停能看到 Agent 名字
 - 重启后标签顺序还在
 - 菜单和提示文字跟着 Codex 设置的语言走。内置简体中文、繁体中文、英语、日语、韩语等 20 种，其他语言显示英语
 
@@ -53,14 +58,28 @@ App 包里的东西一点没改。一个后台小脚本借 [CodexHost](https://g
 |---|---|
 | macOS | 在 macOS 27.0.1 上测过 |
 | 桌面 App | `/Applications` 里的 `ChatGPT.app`（带 Codex 的 Electron 版），测试版本 26.1027.51404。`Codex.app` 也能匹配，但没测过 |
-| [CodexHost](https://github.com/BytePioneer-AI/codex-host) | 测试版本 0.17.0。App 必须经它启动，调试端口是它开的 |
+| [CodexHost](https://github.com/BytePioneer-AI/codex-host) | 可选。测试版本 0.17.0 和 0.17.3。只有 CodexHost 安装方式和标签上的 Agent logo 需要它 |
 | Python | Xcode Command Line Tools 自带的 `/usr/bin/python3`，不用装任何包 |
 
 ## <img src="assets/icons/download-simple.svg" width="20" height="20" align="top"> 安装
 
+有两种装法。两种用的是同一套文件、同一个 LaunchAgent，重新运行 `install.py`，带不带 `--standalone` 就决定切到哪一种。
+
+| | 配合 CodexHost | 独立安装 |
+|---|---|---|
+| 命令 | `python3 install.py` | `python3 install.py --standalone` |
+| 调试端口谁开 | CodexHost | 注入器，把刚启动的 App 重开一次 |
+| 标签上的 Agent logo | 有 | 没有，只显示标题 |
+| 从 Dock 打开 | 要装下面的冷启动小工具 | 直接可以 |
+
 ```bash
 git clone https://github.com/yuanruoyu515/chatgpt-codex-tabs.git
 cd chatgpt-codex-tabs
+```
+
+### 配合 CodexHost
+
+```bash
 python3 install.py
 ```
 
@@ -81,7 +100,23 @@ python3 doctor.py
 >
 > 每次冷启动，App 会重开一次，窗口闪一下，这是 CodexHost 在接管。
 
-每行显示 `[ok]` 或 `[!!]`；标签栏生效时退出码是 0。
+### 不装 CodexHost
+
+```bash
+python3 install.py --standalone
+```
+
+App 开着的话，先退出，再照常从 Dock、访达或聚焦搜索打开。之后每次打开，窗口会先出来、关掉，几秒后带着标签栏回来。第二次启动就是注入器在加调试端口。用 `python3 doctor.py` 确认。
+
+它对要动哪个 App 很小心：
+
+- 只重开启动不到 20 秒的 App。已经开了一阵的，就算没有端口也不动。
+- 有 CodexHost 启动器在运行时，启动交给 CodexHost，注入器只管注入。
+- 重开后还是没有端口，就停 10 分钟不再重开，不会来回循环。
+
+### 两种都适用
+
+`doctor.py` 每项检查打一行，显示 `[ok]` 或 `[!!]`；标签栏生效时退出码是 0。
 
 装完可以把克隆下来的文件夹删掉。`install.py` 会把需要的文件复制到 `~/Library/Application Support/chatgpt-tabs-inject/`，再注册 LaunchAgent `com.ruoyu.chatgpt-tabs.inject`，登录后自动运行。
 
@@ -95,10 +130,10 @@ Set up https://github.com/yuanruoyu515/chatgpt-codex-tabs on this Mac. Follow AG
 
 ## <img src="assets/icons/tree-structure.svg" width="20" height="20" align="top"> 原理
 
-1. CodexHost 启动 App 时带上 `--remote-debugging-port`，只监听 `127.0.0.1`。
+1. App 运行时带着 `--remote-debugging-port`，只监听 `127.0.0.1`。CodexHost 启动 App 时会加上这个参数；独立模式下，`inject.py` 盯着启动不到 20 秒、又没带参数的 App 进程，把它退出，再用 `open -a … --args --remote-debugging-port=<空闲端口>` 重新打开。
 2. `src/inject.py` 作为 LaunchAgent 常驻，从 `ps` 里找带这个参数的 App 进程，读 `http://127.0.0.1:<端口>/json`，找到主窗口（`app://-/index.html`）。
 3. 它用 DevTools 协议的 `Runtime.evaluate` 把 `src/renderer.js` 送进去。脚本按自身内容的哈希算版本：页面刷新了，或者 `renderer.js` 改了，几秒内会重新注入；没变就不动。
-4. `renderer.js` 读侧栏每一行的 `data-app-action-sidebar-thread-*` 属性来生成标签，再从 CodexHost 的 `data-codexhost-sidebar-agent-icon` 复制 Agent logo，按 Agent 缓存到 `localStorage`。侧栏折叠或滚走了，标签上的 logo 也还在。
+4. `renderer.js` 读侧栏每一行的 `data-app-action-sidebar-thread-*` 属性来生成标签，装了 CodexHost 时，再从它的 `data-codexhost-sidebar-agent-icon` 复制 Agent logo，按 Agent 缓存到 `localStorage`。侧栏折叠或滚走了，标签上的 logo 也还在。
 5. 切换标签时点侧栏对应那一行；找不到那一行，就发 App 自己的 `open-in-main-window` 消息。右键标签弹出的是标签栏自己的菜单；鼠标移到里面的「对话选项…」上，才把右键转给侧栏那一行，由 App 弹出它自己的菜单。App 那个菜单是系统原生菜单，加不进标签操作。之所以悬停打开而不是点击打开，是因为刚点过鼠标就弹出的原生菜单，macOS 会把它放在光标底下，不管 App 指定的位置。
 
 我一开始走的是改包的路：复制一份 App，改 `app.asar`，再 ad-hoc 重签名。macOS 直接拒绝启动（先是受限 entitlement 导致 spawn error 163，后来 Team ID 不一致，库校验又过不去），而且每次官方更新都得从头再来一遍。运行时注入没有这些麻烦，再选一次我还是选它。
@@ -117,7 +152,9 @@ rm -rf ~/Library/Application\ Support/chatgpt-tabs-inject
 - 只支持本地 Codex 对话。远程主机、云任务和普通 ChatGPT 对话暂时没有标签。
 - 「对话选项…」要靠侧栏里对应的那一行。对话在折叠起来的项目里时，标签菜单只能关标签。
 - 只有主窗口有标签栏，「在新窗口中打开」开出来的窗口没有。
-- 没有 CodexHost 就没有调试端口，也就没有标签栏。CodexHost 的侧栏图标没了，标签就只显示标题。
+- 没有 CodexHost 就没有侧栏 Agent 图标，标签只显示标题。
+- 独立模式下，每次冷启动都要多启动一次 App，多花几秒。已经开了一阵、没带端口的 App 不会被动，退出再打开就好。
+- 调试端口只监听 `127.0.0.1`，但你 Mac 上跑的任何程序都能连上去，在 App 里执行代码。两种模式都一样，CodexHost 开的也是这个端口。
 - 依赖 App 的 DOM 属性。哪天更新把 `data-app-action-sidebar-thread-*` 或 `open-in-main-window` 改名了，标签栏就不会出现，要等选择器跟着改。这时 `doctor.py` 仍会显示注入器在运行。
 
 ## 文件
@@ -129,6 +166,22 @@ rm -rf ~/Library/Application\ Support/chatgpt-tabs-inject
 | `install.py` / `uninstall.py` | 注册、移除 LaunchAgent |
 | `doctor.py` | 只读的自检脚本 |
 | `AGENTS.md` | 给 AI Agent 的配置说明 |
+| `assets/brand/` | Logo 和插图（SVG） |
+
+## <img src="assets/icons/palette.svg" width="20" height="20" align="top"> 品牌
+
+<img alt="Codex Tabs 的小鸭子坐在一排标签上" src="assets/brand/duck-on-tabs.svg" width="200" align="right">
+
+吉祥物是一只白色小鸭子，抱着一个蓝色的标签窗口；另一张插图里，它坐在标签栏上。两张都是 SVG，放在 [`assets/brand/`](assets/brand/)。
+
+| | |
+|---|---|
+| `logo.svg` | 主 logo，浅色背景用 |
+| `logo-dark.svg` | 主 logo，深色背景用 |
+| `duck-on-tabs.svg` | 坐在标签栏上的小鸭子 |
+| 蓝色 | `#007AFF`，后面衬 `#B9D5FF` |
+| 鸭子 | 描边 `#30363B`，身体 `#FCFCFC`，嘴 `#FFB547`，腮红 `#FFD5C2` |
+| 字体 | 英文 Century Gothic，中文苹方（PingFang SC） |
 
 ## 致谢
 

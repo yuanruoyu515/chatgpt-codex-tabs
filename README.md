@@ -6,7 +6,7 @@
 <p>
   <img alt="macOS" src="https://img.shields.io/badge/platform-macOS-18181B?logo=apple&logoColor=white">
   <img alt="Python 3, standard library only" src="https://img.shields.io/badge/Python_3-stdlib_only-3B82F6?logo=python&logoColor=white">
-  <a href="https://github.com/BytePioneer-AI/codex-host"><img alt="Requires CodexHost" src="https://img.shields.io/badge/needs-CodexHost-3B82F6"></a>
+  <a href="https://github.com/BytePioneer-AI/codex-host"><img alt="Works with or without CodexHost" src="https://img.shields.io/badge/CodexHost-optional-3B82F6"></a>
   <a href="https://linux.do/"><img alt="Recognizes the LINUX DO community" src="https://img.shields.io/badge/community-LINUX%20DO-FFB000"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-18181B"></a>
   <a href="https://www.threads.com/@realtimyry"><img alt="Threads @realtimyry" src="https://img.shields.io/badge/Threads-@realtimyry-18181B?logo=threads&logoColor=white"></a>
@@ -14,9 +14,14 @@
 
 **English** · [简体中文](README.zh-CN.md) · [Setup guide for AI agents](AGENTS.md)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
+  <img alt="The Codex Tabs duck holding a blue tabbed window" src="assets/brand/logo.svg" width="120" align="right">
+</picture>
+
 Codex Desktop keeps every thread in the sidebar. With four or five threads going at once, I kept scrolling that sidebar to get back to the one I had open a minute ago. This adds a tab row above the chat, the way a browser does it, and puts each thread's agent logo (Codex, Claude Code, DeepSeek, WorkBuddy and the rest) on its tab.
 
-Nothing inside the app bundle changes. A small background script injects the tab bar at runtime through the local debug port that [CodexHost](https://github.com/BytePioneer-AI/codex-host) already opens, so the official signature stays intact and app updates keep working.
+Nothing inside the app bundle changes. A small background script injects the tab bar at runtime through a local debug port, so the official signature stays intact and app updates keep working. There are two ways to get that port. If you already use [CodexHost](https://github.com/BytePioneer-AI/codex-host), it opens the port, and the tabs show each agent's logo. If you don't, the standalone install opens it for you: when you open the app from the Dock, it quits that fresh launch and opens it again with the port.
 
 ## <img src="assets/icons/cursor-click.svg" width="20" height="20" align="top"> What you get
 
@@ -28,7 +33,7 @@ Nothing inside the app bundle changes. A small background script injects the tab
 - A blue dot marks a thread that is still running.
 - <kbd>×</kbd> closes the tab only. The thread is not deleted or archived. Middle-click works too.
 - <kbd>+</kbd> starts a new chat.
-- The logo on each tab is the same icon CodexHost draws in the sidebar. Hover a tab to see the agent's name.
+- With CodexHost, the logo on each tab is the same icon CodexHost draws in the sidebar. Hover a tab to see the agent's name.
 - Tab order survives restarts.
 - Menus and labels follow the language Codex is set to. English, Chinese (Simplified and Traditional), Japanese, Korean and 15 more are built in; anything else falls back to English.
 
@@ -54,14 +59,28 @@ Right-click a tab for the tab actions. Hover **Thread options…** and the sideb
 |---|---|
 | macOS | Tested on macOS 27.0.1 |
 | Desktop app | `ChatGPT.app` (the Electron build with Codex) in `/Applications`. Tested on 26.1027.51404. `Codex.app` is matched too but untested |
-| [CodexHost](https://github.com/BytePioneer-AI/codex-host) | Tested on 0.17.0. The app has to be started through it, because that is what opens the debug port |
+| [CodexHost](https://github.com/BytePioneer-AI/codex-host) | Optional. Tested on 0.17.0 and 0.17.3. Needed only for the CodexHost install and for agent logos on tabs |
 | Python | `/usr/bin/python3` from the Xcode Command Line Tools. No packages to install |
 
 ## <img src="assets/icons/download-simple.svg" width="20" height="20" align="top"> Install
 
+There are two installs. Both use the same files and the same LaunchAgent, so running `install.py` again, with or without `--standalone`, switches between them.
+
+| | With CodexHost | Standalone |
+|---|---|---|
+| Command | `python3 install.py` | `python3 install.py --standalone` |
+| Who opens the debug port | CodexHost | The injector, by reopening a fresh launch |
+| Agent logos on tabs | Yes | No, titles only |
+| Opening from the Dock | Needs the cold-start helper below | Works |
+
 ```bash
 git clone https://github.com/yuanruoyu515/chatgpt-codex-tabs.git
 cd chatgpt-codex-tabs
+```
+
+### With CodexHost
+
+```bash
 python3 install.py
 ```
 
@@ -82,7 +101,23 @@ python3 doctor.py
 >
 > On each cold start the app restarts once (the window flashes briefly). That restart is CodexHost taking over.
 
-Each line reads `[ok]` or `[!!]`, and the exit code is 0 once the bar is live.
+### Without CodexHost
+
+```bash
+python3 install.py --standalone
+```
+
+If the app is open, quit it and open it again from the Dock, Finder or Spotlight, as usual. Each time you open it, the window shows up, closes, and comes back a few seconds later with the tab bar. That second launch is the injector adding the debug port. Check it with `python3 doctor.py`.
+
+It is careful about which launches it touches:
+
+- It only reopens an app that launched less than 20 seconds ago. An app that has been open longer is left alone, even without the port.
+- If a CodexHost launcher is running, the injector leaves the launch to CodexHost and only injects.
+- If the reopened app still has no port, the injector stops reopening for 10 minutes rather than looping.
+
+### Either way
+
+`doctor.py` prints one line per check, each `[ok]` or `[!!]`, and exits with 0 once the bar is live.
 
 You can delete the cloned folder afterwards. `install.py` copies what it needs to `~/Library/Application Support/chatgpt-tabs-inject/` and registers the LaunchAgent `com.ruoyu.chatgpt-tabs.inject`, which starts at login.
 
@@ -96,10 +131,10 @@ Set up https://github.com/yuanruoyu515/chatgpt-codex-tabs on this Mac. Follow AG
 
 ## <img src="assets/icons/tree-structure.svg" width="20" height="20" align="top"> How it works
 
-1. CodexHost starts the app with `--remote-debugging-port` bound to `127.0.0.1`.
+1. The app runs with `--remote-debugging-port` bound to `127.0.0.1`. CodexHost passes the flag when it starts the app. In standalone mode, `inject.py` watches for an app process younger than 20 seconds that lacks it, quits that process, and reopens the app with `open -a … --args --remote-debugging-port=<free port>`.
 2. `src/inject.py` runs as a LaunchAgent. It watches `ps` for the app process with that flag, reads `http://127.0.0.1:<port>/json` and finds the main window (`app://-/index.html`).
 3. It sends `src/renderer.js` over the DevTools protocol with `Runtime.evaluate`. The script is versioned by its own hash, so a reload or a changed `renderer.js` gets re-injected within a few seconds and an unchanged one is left alone.
-4. `renderer.js` reads the sidebar rows (`data-app-action-sidebar-thread-*`) to build tabs. It copies the agent logo from CodexHost's `data-codexhost-sidebar-agent-icon` span and caches it per agent in `localStorage`, so a tab keeps its logo while its sidebar row is collapsed or scrolled away.
+4. `renderer.js` reads the sidebar rows (`data-app-action-sidebar-thread-*`) to build tabs. With CodexHost, it copies the agent logo from CodexHost's `data-codexhost-sidebar-agent-icon` span and caches it per agent in `localStorage`, so a tab keeps its logo while its sidebar row is collapsed or scrolled away.
 5. Switching tabs clicks the sidebar row, or falls back to the app's own `open-in-main-window` message. Right-clicking a tab opens the tab bar's own menu. Hovering its **Thread options…** item sends a right-click to that row, so the app opens its own menu. That menu is native, so the tab actions can't be added to it. It opens on hover rather than on click because macOS puts a native menu under the pointer when it opens right after a click, whatever position the app asks for.
 
 I tried patching first: copy the app, edit `app.asar`, re-sign it ad hoc. macOS refused to launch it (spawn error 163 from restricted entitlements, then library validation failing on mixed Team IDs), and every official update would have meant doing it all again. Runtime injection skips all of that, and I'd pick it again.
@@ -118,7 +153,9 @@ A tab bar that is already on screen goes away on the next reload or app restart.
 - Local Codex threads only. Remote hosts, cloud tasks and plain ChatGPT chats do not get tabs yet.
 - **Thread options…** needs the thread's row in the sidebar. If the thread sits in a collapsed project, the tab menu can only close tabs.
 - Only the main window has a tab bar. Windows opened with "Open in new window" do not.
-- Without CodexHost there is no debug port, so no tab bar. Without CodexHost's sidebar icons, tabs show titles only.
+- Without CodexHost there are no sidebar agent icons, so tabs show titles only.
+- In standalone mode, every cold start costs one extra app launch, a few seconds. An app that has been open a while without the port is left alone; quit it and open it again.
+- The debug port only listens on `127.0.0.1`, but any program running on your Mac can connect to it and run code inside the app. That holds in both modes; CodexHost opens the same port.
 - It depends on the app's DOM attributes. If an update renames `data-app-action-sidebar-thread-*` or the `open-in-main-window` message, the bar stops appearing until the selectors are updated. `doctor.py` will still show the injector running.
 
 ## Files
@@ -130,6 +167,22 @@ A tab bar that is already on screen goes away on the next reload or app restart.
 | `install.py` / `uninstall.py` | Register or remove the LaunchAgent |
 | `doctor.py` | Read-only health check |
 | `AGENTS.md` | Setup instructions for AI agents |
+| `assets/brand/` | Logo and illustration (SVG) |
+
+## <img src="assets/icons/palette.svg" width="20" height="20" align="top"> Brand
+
+<img alt="The Codex Tabs duck sitting on a row of tabs" src="assets/brand/duck-on-tabs.svg" width="200" align="right">
+
+The mascot is a white duck holding a blue tabbed window. A second illustration has it sitting on a tab bar. Both are SVGs in [`assets/brand/`](assets/brand/).
+
+| | |
+|---|---|
+| `logo.svg` | Main logo, for light backgrounds |
+| `logo-dark.svg` | Main logo, for dark backgrounds |
+| `duck-on-tabs.svg` | The duck sitting on a tab bar |
+| Blue | `#007AFF`, with `#B9D5FF` behind it |
+| Duck | Outline `#30363B`, body `#FCFCFC`, beak `#FFB547`, blush `#FFD5C2` |
+| Type | Century Gothic for English, PingFang SC for Chinese |
 
 ## Credits
 

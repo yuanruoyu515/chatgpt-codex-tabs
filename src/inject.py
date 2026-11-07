@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 """Inject renderer.js into the running ChatGPT/Codex app. Never modifies the app bundle.
 
-Relies on the local-only DevTools port that codexhost opens when it takes over the app.
+Needs the app to run with a local-only DevTools port. Two modes:
+  default       CodexHost opens the port when it takes over the app; this script only injects.
+  --standalone  No CodexHost. When the app has just been opened from the Dock, Finder or
+                Spotlight without the port, this script quits it and opens it again with the port.
 Runs as a LaunchAgent: injects as soon as the main window loads, and again after reloads.
 """
-import base64, hashlib, json, os, pathlib, re, socket, struct, subprocess, sys, time, urllib.request
+import base64, hashlib, json, os, pathlib, re, signal, socket, struct, subprocess, sys, time, urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parent
 LOG = ROOT / 'inject.log'
@@ -19,14 +22,25 @@ def log(msg):
         if LOG.stat().st_size > 200_000: LOG.write_text('')
     except OSError: pass
 
-def ports():
-    out = subprocess.run(['ps', '-axo', 'command='], capture_output=True, text=True).stdout
-    found = set()
+def seconds(etime):
+    """ps etime ([[dd-]hh:]mm:ss) -> seconds."""
+    days, _, rest = etime.rpartition('-')
+    total = 0
+    for part in rest.split(':'): total = total * 60 + int(part)
+    return total + int(days or 0) * 86400
+
+def processes():
+    """Main app processes as (pid, age in seconds, command line)."""
+    out = subprocess.run(['ps', '-axo', 'pid=,etime=,command='], capture_output=True, text=True).stdout
+    found = []
     for line in out.splitlines():
-        if APP_EXE.match(line) and '--type=' not in line:
-            m = PORT.search(line)
-            if m: found.add(int(m.group(1)))
+        pid, etime, command = (line.split(None, 2) + ['', ''])[:3]
+        if APP_EXE.match(command) and '--type=' not in command:
+            found.append((int(pid), seconds(etime), command))
     return found
+
+def ports():
+    return {int(m.group(1)) for _, _, c in processes() if (m := PORT.search(c))}
 
 def targets(port):
     with urllib.request.urlopen(f'http://127.0.0.1:{port}/json', timeout=2) as r:
@@ -77,16 +91,93 @@ def evaluate(url, expression):
     finally:
         s.close()
 
+# --- Standalone mode: cold-start takeover -------------------------------------------------------
+# Only a process this young counts as a fresh launch; anything older may already hold the user's work.
+FRESH = 20
+# Wait this long after launch so a CodexHost-style launcher, if one exists, can act first.
+SETTLE = 2
+# A launch without the port this soon after our own relaunch means the flag did not stick: back off.
+LOOP_WINDOW, BACKOFF = 15, 600
+SUPERVISOR = re.compile(r'(?:^|/)codexhost(?: launch\b|$)')
+
+def bundle_of(command):
+    return command.split('.app/Contents/MacOS/', 1)[0] + '.app'
+
+def free_port():
+    with socket.socket() as s:
+        s.bind(('127.0.0.1', 0))
+        return s.getsockname()[1]
+
+def supervisor_running():
+    out = subprocess.run(['ps', '-axo', 'command='], capture_output=True, text=True).stdout
+    return any(SUPERVISOR.search(line.split(' --', 1)[0]) for line in out.splitlines())
+
+def alive(pid):
+    try: os.kill(pid, 0); return True
+    except ProcessLookupError: return False
+    except PermissionError: return True
+
+def relaunch(pid, bundle):
+    """Quit the fresh app gracefully, then open it again with the DevTools port."""
+    os.kill(pid, signal.SIGTERM)
+    for _ in range(80):
+        if not alive(pid): break
+        time.sleep(0.1)
+    else:
+        os.kill(pid, signal.SIGKILL)
+        time.sleep(0.5)
+    time.sleep(0.5)  # let the single-instance lock go
+    port = free_port()
+    subprocess.run(['/usr/bin/open', '-a', bundle, '--args', '--remote-debugging-address=127.0.0.1',
+                    f'--remote-debugging-port={port}'], check=True, capture_output=True)
+    return port
+
+class Takeover:
+    def __init__(self):
+        # Pids already decided on. Old processes are skipped by age, so one opened before this
+        # service started (login items, a reinstall) is taken over only if it is still fresh.
+        self.left_alone = set()
+        self.last_relaunch = 0.0
+        self.paused_until = 0.0
+
+    def step(self):
+        now = time.time()
+        for pid, age, command in processes():
+            if pid in self.left_alone or PORT.search(command): continue
+            if age < SETTLE: continue
+            self.left_alone.add(pid)  # one decision per process
+            if age > FRESH:
+                log(f'pid {pid}: running {age}s without a debug port; left alone. Quit and reopen the app')
+            elif now < self.paused_until:
+                log(f'pid {pid}: takeover paused after a failed relaunch; left alone')
+            elif supervisor_running():
+                log(f'pid {pid}: a CodexHost launcher is running; left to it')
+            elif now - self.last_relaunch < LOOP_WINDOW:
+                self.paused_until = now + BACKOFF
+                log(f'pid {pid}: relaunched {int(now - self.last_relaunch)}s ago and still no debug port; '
+                    f'pausing takeover for {BACKOFF // 60} min')
+            else:
+                try:
+                    port = relaunch(pid, bundle_of(command))
+                    self.last_relaunch = time.time()
+                    log(f'pid {pid}: cold start without a debug port; reopened on port {port}')
+                except (OSError, subprocess.CalledProcessError) as e:
+                    self.paused_until = time.time() + BACKOFF
+                    log(f'pid {pid}: relaunch failed: {e}')
+
 def main():
+    standalone = '--standalone' in sys.argv[1:]
+    takeover = Takeover() if standalone else None
     source = (ROOT / 'renderer.js').read_text()
     version = hashlib.sha256(source.encode()).hexdigest()[:16]
     # Polling sends only this short probe; the full source goes over the wire only when a window needs it.
     probe = f"window.__ruoyuTabsVersion === '{version}' && !!window.__ruoyuTabs"
     expression = (f"({probe}) ? 'present' : "
                   f"(({source.strip()})({BRIDGE}), window.__ruoyuTabsVersion = '{version}', 'installed')")
-    log(f'started, renderer {version}')
+    log(f"started{' (standalone)' if standalone else ''}, renderer {version}")
     seen = {}
     while True:
+        if takeover: takeover.step()
         live = ports()
         busy = False
         for port in live:

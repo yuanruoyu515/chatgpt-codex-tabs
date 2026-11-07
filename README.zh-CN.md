@@ -230,39 +230,8 @@ rm -rf ~/Library/Application\ Support/chatgpt-tabs-inject
 | `install.py` / `uninstall.py` | 注册、移除 LaunchAgent |
 | `doctor.py` | 只读的自检脚本 |
 | `AGENTS.md` | 给 AI Agent 的配置说明 |
-| `assets/brand/` | Logo 和插图（SVG） |
 
 </details>
-
-## <img src="assets/icons/palette.svg" width="20" height="20" align="top"> 品牌
-
-吉祥物是一只白色小鸭子，抱着一个蓝色的标签窗口；另一张插图里，它坐在标签栏上。两张都是 SVG，放在 [`assets/brand/`](assets/brand/)。
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
-        <img alt="Codex Tabs 的小鸭子，抱着一个蓝色的标签窗口" src="assets/brand/logo.svg" width="160">
-      </picture>
-      <br><code>logo.svg</code> · <code>logo-dark.svg</code>
-    </td>
-    <td width="50%" align="center">
-      <img alt="Codex Tabs 的小鸭子坐在一排标签上" src="assets/brand/duck-on-tabs.svg" width="180">
-      <br><code>duck-on-tabs.svg</code>
-    </td>
-  </tr>
-</table>
-
-| | 颜色 | 色值 |
-|---|---|---|
-| <img alt="#007AFF" src="https://img.shields.io/badge/%20-%20-007AFF?style=flat-square" width="28" height="20"> | 蓝色 | `#007AFF` |
-| <img alt="#B9D5FF" src="https://img.shields.io/badge/%20-%20-B9D5FF?style=flat-square" width="28" height="20"> | 浅蓝，衬在窗口后面 | `#B9D5FF` |
-| <img alt="#30363B" src="https://img.shields.io/badge/%20-%20-30363B?style=flat-square" width="28" height="20"> | 鸭子描边 | `#30363B` |
-| <img alt="#FFB547" src="https://img.shields.io/badge/%20-%20-FFB547?style=flat-square" width="28" height="20"> | 嘴 | `#FFB547` |
-| <img alt="#FFD5C2" src="https://img.shields.io/badge/%20-%20-FFD5C2?style=flat-square" width="28" height="20"> | 腮红 | `#FFD5C2` |
-
-字体：英文 Century Gothic，中文苹方（PingFang SC）。
 
 ## 致谢
 

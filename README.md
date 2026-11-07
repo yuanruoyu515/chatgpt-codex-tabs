@@ -231,39 +231,8 @@ I tried patching first: copy the app, edit `app.asar`, re-sign it ad hoc. macOS 
 | `install.py` / `uninstall.py` | Register or remove the LaunchAgent |
 | `doctor.py` | Read-only health check |
 | `AGENTS.md` | Setup instructions for AI agents |
-| `assets/brand/` | Logo and illustration (SVG) |
 
 </details>
-
-## <img src="assets/icons/palette.svg" width="20" height="20" align="top"> Brand
-
-The mascot is a white duck holding a blue tabbed window. A second illustration has it sitting on a tab bar. Both are SVGs in [`assets/brand/`](assets/brand/).
-
-<table>
-  <tr>
-    <td width="50%" align="center">
-      <picture>
-        <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-dark.svg">
-        <img alt="The Codex Tabs duck holding a blue tabbed window" src="assets/brand/logo.svg" width="160">
-      </picture>
-      <br><code>logo.svg</code> · <code>logo-dark.svg</code>
-    </td>
-    <td width="50%" align="center">
-      <img alt="The Codex Tabs duck sitting on a row of tabs" src="assets/brand/duck-on-tabs.svg" width="180">
-      <br><code>duck-on-tabs.svg</code>
-    </td>
-  </tr>
-</table>
-
-| | Color | Hex |
-|---|---|---|
-| <img alt="#007AFF" src="https://img.shields.io/badge/%20-%20-007AFF?style=flat-square" width="28" height="20"> | Blue | `#007AFF` |
-| <img alt="#B9D5FF" src="https://img.shields.io/badge/%20-%20-B9D5FF?style=flat-square" width="28" height="20"> | Light blue, behind the window | `#B9D5FF` |
-| <img alt="#30363B" src="https://img.shields.io/badge/%20-%20-30363B?style=flat-square" width="28" height="20"> | Duck outline | `#30363B` |
-| <img alt="#FFB547" src="https://img.shields.io/badge/%20-%20-FFB547?style=flat-square" width="28" height="20"> | Beak | `#FFB547` |
-| <img alt="#FFD5C2" src="https://img.shields.io/badge/%20-%20-FFD5C2?style=flat-square" width="28" height="20"> | Blush | `#FFD5C2` |
-
-Type: Century Gothic for English, PingFang SC for Chinese.
 
 ## Credits
 

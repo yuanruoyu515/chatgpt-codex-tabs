@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="70 120 884 800">
+ <g transform="translate(150 40) scale(.72)"><g stroke="#30363B" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+ <path d="M590 200C585 182 572 170 556 160M596 200C596 182 604 168 616 158" fill="none"/>
+ <path d="M160 525C200 530 220 560 258 578C330 575 410 560 425 505C435 460 405 420 410 340C420 250 495 205 595 205C690 205 760 275 768 380L752 470C745 500 735 525 745 555C790 650 790 760 640 815C520 855 330 850 230 805C130 760 120 660 192 607C165 590 140 560 150 535Z" fill="#FCFCFC"/>
+ <path d="M764 380C812 385 860 402 885 430C852 458 805 470 756 465Z" fill="#FFB547"/>
+ <ellipse cx="667" cy="348" rx="13" ry="17" fill="#30363B" stroke="none"/>
+ <ellipse cx="640" cy="418" rx="25" ry="13" fill="#FFD5C2" stroke="none"/>
+</g></g>
+ <g stroke="#30363B" stroke-width="22" stroke-linejoin="round">
+  <path d="M90 690H934" stroke-linecap="round"/>
+  <path d="M110 690L140 610Q148 590 170 590H330Q352 590 360 610L390 690" fill="#E8F1FF"/>
+  <path d="M370 690L400 600Q408 578 432 578H640Q664 578 672 600L702 690" fill="#007AFF"/>
+  <path d="M682 690L712 610Q720 590 742 590H880Q902 590 910 610L934 690" fill="#E8F1FF"/>
+  <rect x="90" y="690" width="844" height="210" rx="34" fill="#fff"/>
+ </g>
+ <g fill="#E5E8ED"><rect x="150" y="750" width="420" height="26" rx="13"/><rect x="150" y="806" width="300" height="26" rx="13"/></g>
+</svg>

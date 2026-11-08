@@ -109,7 +109,8 @@ python3 install.py
 按 CodexHost README 里的方法启动 Codex 桌面版。窗口加载完大约两秒，标签栏就出来了。
 
 ✅ 标签上有 Agent logo<br>
-⚠️ 从 Dock 打开要装[冷启动小工具](#opening-from-the-dock-with-codexhost)
+⚠️ 从 Dock 打开要装[冷启动小工具](#opening-from-the-dock-with-codexhost)<br>
+💡 配合 [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) 自动注入，体验更好
 
 </td>
     <td valign="top">

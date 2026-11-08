@@ -110,7 +110,8 @@ python3 install.py
 Start Codex Desktop through CodexHost, the way its README describes. The tab bar shows up about two seconds after the window loads.
 
 ✅ Agent logos on tabs<br>
-⚠️ Opening from the Dock needs the [cold-start helper](#opening-from-the-dock-with-codexhost)
+⚠️ Opening from the Dock needs the [cold-start helper](#opening-from-the-dock-with-codexhost)<br>
+💡 Smoother with [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch), which injects automatically
 
 </td>
     <td valign="top">

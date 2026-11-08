@@ -110,8 +110,7 @@ python3 install.py
 Start Codex Desktop through CodexHost, the way its README describes. The tab bar shows up about two seconds after the window loads.
 
 ✅ Agent logos on tabs<br>
-⚠️ Opening from the Dock needs the [cold-start helper](#opening-from-the-dock-with-codexhost)<br>
-💡 Smoother with [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch), which injects automatically
+💡 Add [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) so opening from the Dock works too
 
 </td>
     <td valign="top">
@@ -164,13 +163,17 @@ When you open the app without a debug port, the injector quits that fresh launch
 <summary><b>Opening from the Dock with CodexHost</b></summary>
 <br>
 
-Stock CodexHost only takes over when you start the app through CodexHost. Open ChatGPT/Codex straight from the Dock, Finder or Spotlight and there is no debug port, so no tab bar. I wrote an opt-in helper that hands those cold starts to CodexHost automatically: [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702). It is not merged yet. Until it is, either start through CodexHost every time, use the standalone install, or install the helper from my branch ([setup guide](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md); needs macOS 13+ and Swift 6 from the Xcode Command Line Tools):
+Stock CodexHost only takes over when you start the app through CodexHost. Open ChatGPT/Codex straight from the Dock, Finder or Spotlight and there is no debug port, so no tab bar.
+
+My companion [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) fixes that: it notices the cold start and hands it to CodexHost, and the tab bar follows. With CodexHost, Auto Launch and Tabs together, you open the app the usual way and get everything back. It needs macOS 13+ and Swift 6 from the Xcode Command Line Tools:
 
 ```bash
-git clone -b feat/macos-cold-start-automation https://github.com/yuanruoyu515/codex-host.git
-cd codex-host
-python3 tools/macos-auto-launch/manage.py install
+git clone https://github.com/yuanruoyu515/codexhost-auto-launch.git
+cd codexhost-auto-launch
+python3 install.py
 ```
+
+If you installed the older helper from [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702), the installer migrates it. Don't install Auto Launch with the standalone install; that one already handles cold starts on its own.
 
 On each cold start the app restarts once (the window flashes briefly). That restart is CodexHost taking over.
 
@@ -187,7 +190,7 @@ Run `python3 doctor.py` and look at the first `[!!]` line.
 | `Desktop app` | ChatGPT.app / Codex.app is not in `/Applications` | Install the Codex desktop app first |
 | `CodexHost` | You picked the CodexHost install but CodexHost isn't there | Install CodexHost, or switch: `python3 install.py --standalone` |
 | `Injector LaunchAgent` | The background script isn't running | Run `python3 install.py` again (add `--standalone` if that's your install) |
-| `App started with a debug port` | The app is closed, or was opened without the port | CodexHost: quit and start it through CodexHost. Standalone: quit and open it again |
+| `App started with a debug port` | The app is closed, or was opened without the port | CodexHost: quit and start it through CodexHost, or install [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) for Dock launches. Standalone: quit and open it again |
 | `Tab bar injected` | The port is there but the bar isn't yet | Wait 5 seconds and run `doctor.py` again. Still failing? The app may have changed; [open an issue](https://github.com/yuanruoyu515/chatgpt-codex-tabs/issues) with the `inject.log` lines `doctor.py` prints |
 
 ## <img src="assets/icons/trash.svg" width="20" height="20" align="top"> Uninstall

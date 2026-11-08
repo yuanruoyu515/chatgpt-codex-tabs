@@ -9,9 +9,9 @@ There are two install modes. They share files and the LaunchAgent label, so re-r
 - **With CodexHost** (`python3 install.py`): CodexHost opens the debug port; the injector only injects. Tabs get agent logos.
 - **Standalone** (`python3 install.py --standalone`): no CodexHost needed. When the app process is under 20 s old and has no debug port, the injector quits it (SIGTERM) and reopens it with `open -a <app> --args --remote-debugging-address=127.0.0.1 --remote-debugging-port=<free port>`. Older processes are never touched. If a `codexhost launch` process is running, it yields to CodexHost. A relaunch that still has no port pauses takeover for 10 minutes. Tabs show titles only.
 
-If the user uses CodexHost, mention [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch): used together with this project, its automatic injection gives a smoother experience. Offer it; do not install it unasked.
-
 Pick the mode by what the user has: CodexHost installed and in use → with CodexHost; otherwise → standalone. Ask if unsure.
+
+In CodexHost mode, also ask the user whether to install [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) (step 2b). Stock CodexHost only takes over when the app is started through it; this companion hands Dock, Finder and Spotlight cold starts to CodexHost, so the tab bar comes back every time the user opens the app normally.
 
 ## Ground rules
 
@@ -21,7 +21,7 @@ Pick the mode by what the user has: CodexHost installed and in use → with Code
 - Do not install CodexHost on the user's behalf without asking. It is a separate project with its own installer. Standalone mode is the alternative when they don't want it.
 - Standalone mode restarts the app on every cold start. That is its job and needs no extra permission once the user chose it, but do not quit an app that is already open to trigger it; ask the user to quit and reopen.
 - Report the final `python3 doctor.py` output verbatim.
-- Stock CodexHost does not take over when the user opens the app from the Dock, Finder or Spotlight. The cold-start helper that fixes this is in the unmerged PR [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702). Offer it; install it only if the user agrees ([setup guide](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md)).
+- Do not install codexhost-auto-launch without asking. In CodexHost mode you must ask (step 2b); in standalone mode do not offer it, because it would compete with the standalone injector for cold starts.
 
 ## 1. Check preconditions
 
@@ -57,6 +57,26 @@ Standalone prints `(standalone)` and a line asking the user to quit and reopen a
 
 `install.py` is idempotent. Run it again after any change to `src/`.
 
+CodexHost mode also prints a `Tip:` about codexhost-auto-launch when no cold-start helper is installed.
+
+## 2b. CodexHost mode: ask about codexhost-auto-launch
+
+Skip this in standalone mode, or if `doctor.py` already prints `[ok] Auto Launch`. Otherwise ask the user, in their language, something like:
+
+> CodexHost only takes over when you start the app through it. Opened from the Dock, Finder or Spotlight, the app gets no tab bar. Install codexhost-auto-launch so those launches go through CodexHost too? Each cold start then restarts the app once (the window flashes briefly). It needs macOS 13+ and Swift 6 from the Xcode Command Line Tools.
+
+If they agree, follow that repository's AGENTS.md; in short:
+
+```bash
+xcrun swiftc --version            # Swift 6 required; if missing, ask before running xcode-select --install
+git clone https://github.com/yuanruoyu515/codexhost-auto-launch.git
+cd codexhost-auto-launch
+python3 install.py
+python3 doctor.py
+```
+
+It runs without `sudo`, leaves the open app session alone, and migrates the older codex-host#702 helper if present. Report its `doctor.py` output too. If they decline, carry on; they can start the app through CodexHost instead.
+
 ## 3. Verify
 
 ```bash
@@ -70,7 +90,7 @@ python3 doctor.py; echo "exit=$?"
 | `Desktop app` | No ChatGPT.app / Codex.app in `/Applications` | Stop and tell the user |
 | `CodexHost` | CodexHost mode but CodexHost not installed | Install CodexHost (ask first), or switch: `python3 install.py --standalone` |
 | `Injector LaunchAgent` | LaunchAgent not running | Re-run `python3 install.py`; check `~/Library/Application Support/chatgpt-tabs-inject/service.log` |
-| `App started with a debug port` | App is not running, or was opened without the port | CodexHost mode: ask the user to quit and start it through CodexHost; for Dock launches offer the codex-host#702 helper. Standalone mode: ask the user to quit and reopen the app normally; `inject.log` should then show `cold start without a debug port; reopened on port N`. Do not restart the app yourself without permission |
+| `App started with a debug port` | App is not running, or was opened without the port | CodexHost mode: ask the user to quit and start it through CodexHost; for Dock launches offer codexhost-auto-launch (step 2b). Standalone mode: ask the user to quit and reopen the app normally; `inject.log` should then show `cold start without a debug port; reopened on port N`. Do not restart the app yourself without permission |
 | `Tab bar injected` | Port found but nothing injected yet | Wait 5 seconds and rerun. Still failing: read `inject.log` (doctor prints its tail). If the log shows `installed` but the bar is missing, the app's DOM probably changed; see below |
 
 ## 4. When the app's DOM changed

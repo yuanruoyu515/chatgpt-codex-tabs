@@ -109,8 +109,7 @@ python3 install.py
 按 CodexHost README 里的方法启动 Codex 桌面版。窗口加载完大约两秒，标签栏就出来了。
 
 ✅ 标签上有 Agent logo<br>
-⚠️ 从 Dock 打开要装[冷启动小工具](#opening-from-the-dock-with-codexhost)<br>
-💡 配合 [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) 自动注入，体验更好
+💡 加装 [codexhost-auto-launch](#opening-from-the-dock-with-codexhost)，从 Dock 打开也有标签栏
 
 </td>
     <td valign="top">
@@ -163,13 +162,17 @@ App 打开时没带调试端口，注入器就把刚启动的它退出，再带�
 <summary><b>配合 CodexHost 时从 Dock 打开</b></summary>
 <br>
 
-原版 CodexHost 只有在你经它启动 App 时才会接管。直接从 Dock、访达或聚焦搜索打开 ChatGPT/Codex，就没有调试端口，也就没有标签栏。我另外写了一个可选的小工具，App 冷启动时自动交给 CodexHost 接管，已经提了 PR：[codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702)，还没合并。合并之前有三个办法：每次都经 CodexHost 启动；改用独立安装；或者从我的分支装这个工具（[安装说明](https://github.com/yuanruoyu515/codex-host/blob/feat/macos-cold-start-automation/docs/platforms/macos/cold-start-automation.md)，需要 macOS 13 以上和 Xcode Command Line Tools 里的 Swift 6）：
+原版 CodexHost 只有在你经它启动 App 时才会接管。直接从 Dock、访达或聚焦搜索打开 ChatGPT/Codex，就没有调试端口，也就没有标签栏。
+
+我另外做了 [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) 来补这一块：它发现 App 冷启动，就交给 CodexHost 接管，标签栏随后自动出来。CodexHost、Auto Launch、Tabs 三个一起装，照常点图标打开 App 就全都在。需要 macOS 13 以上和 Xcode Command Line Tools 里的 Swift 6：
 
 ```bash
-git clone -b feat/macos-cold-start-automation https://github.com/yuanruoyu515/codex-host.git
-cd codex-host
-python3 tools/macos-auto-launch/manage.py install
+git clone https://github.com/yuanruoyu515/codexhost-auto-launch.git
+cd codexhost-auto-launch
+python3 install.py
 ```
+
+以前从 [codex-host#702](https://github.com/BytePioneer-AI/codex-host/pull/702) 装过旧版小工具的，安装时会自动迁移。独立安装不要配它，独立模式自己就会处理冷启动。
 
 每次冷启动，App 会重开一次，窗口闪一下，这是 CodexHost 在接管。
 
@@ -186,7 +189,7 @@ python3 tools/macos-auto-launch/manage.py install
 | `Desktop app` | `/Applications` 里没有 ChatGPT.app / Codex.app | 先装 Codex 桌面版 |
 | `CodexHost` | 选了 CodexHost 安装方式，但没装 CodexHost | 装上 CodexHost，或者切换：`python3 install.py --standalone` |
 | `Injector LaunchAgent` | 后台脚本没在运行 | 重新运行 `python3 install.py`（独立安装记得加 `--standalone`） |
-| `App started with a debug port` | App 没开，或者打开时没带端口 | CodexHost：退出后经 CodexHost 启动。独立安装：退出再打开 |
+| `App started with a debug port` | App 没开，或者打开时没带端口 | CodexHost：退出后经 CodexHost 启动，或者装 [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) 解决从 Dock 打开的问题。独立安装：退出再打开 |
 | `Tab bar injected` | 端口有了，标签栏还没出来 | 等 5 秒再运行一次 `doctor.py`。还不行的话可能是 App 改版了，[开个 issue](https://github.com/yuanruoyu515/chatgpt-codex-tabs/issues)，附上 `doctor.py` 打印的 `inject.log` 内容 |
 
 ## <img src="assets/icons/trash.svg" width="20" height="20" align="top"> 卸载

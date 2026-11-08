@@ -40,6 +40,12 @@ if standalone:
     print(f"[ok] CodexHost: {found or 'not installed'} (optional in standalone mode)")
 else:
     line(bool(found), 'CodexHost', found or 'not installed; install it, or run python3 install.py --standalone')
+    # Optional, so it never fails the check.
+    helpers = [l for l in ['com.ruoyu.codexhost.auto-launch', 'ai.bytepioneer.codexhost.auto-launch',
+                           'com.ruoyu.codexhost.autoinject'] if (AGENT.parent / f'{l}.plist').exists()]
+    print(f"[ok] Auto Launch: {helpers[0]}" if helpers else
+          '[--] Auto Launch: not installed (optional). Dock, Finder and Spotlight launches get no tab bar\n'
+          '     without it: https://github.com/yuanruoyu515/codexhost-auto-launch')
 
 state = subprocess.run(['launchctl', 'print', f'gui/{os.getuid()}/{LABEL}'], capture_output=True, text=True)
 running = state.returncode == 0 and 'state = running' in state.stdout

@@ -16,6 +16,10 @@ DEST = pathlib.Path.home() / 'Library/Application Support/chatgpt-tabs-inject'
 LABEL = 'com.ruoyu.chatgpt-tabs.inject'
 AGENT = pathlib.Path.home() / f'Library/LaunchAgents/{LABEL}.plist'
 PYTHON = '/usr/bin/python3'
+AUTO_LAUNCH = 'https://github.com/yuanruoyu515/codexhost-auto-launch'
+# codexhost-auto-launch and the two helpers it replaces (codex-host#702 and an earlier local listener).
+AUTO_LAUNCH_LABELS = ['com.ruoyu.codexhost.auto-launch', 'ai.bytepioneer.codexhost.auto-launch',
+                      'com.ruoyu.codexhost.autoinject']
 
 def fail(msg):
     print(f'error: {msg}', file=sys.stderr)
@@ -63,4 +67,8 @@ subprocess.run(['launchctl', 'kickstart', f'{domain}/{LABEL}'], check=True)
 print('Installed', LABEL, '->', DEST, '(standalone)' if standalone else '(with CodexHost)')
 if standalone:
     print('If the app is already open, quit it and open it again. From then on, every launch gets the tab bar.')
+if not standalone and not any((AGENT.parent / f'{l}.plist').exists() for l in AUTO_LAUNCH_LABELS):
+    print('Tip: CodexHost only takes over when you start the app through it. To get the tab bar when you\n'
+          '     open the app from the Dock, Finder or Spotlight too, install codexhost-auto-launch:\n'
+          f'     {AUTO_LAUNCH}')
 print('Check it with: python3 doctor.py')

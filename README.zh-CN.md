@@ -109,7 +109,7 @@ python3 install.py
 按 CodexHost README 里的方法启动 Codex 桌面版。窗口加载完大约两秒，标签栏就出来了。
 
 ✅ 标签上有 Agent logo<br>
-💡 加装 [codexhost-auto-launch](#opening-from-the-dock-with-codexhost)，从 Dock 打开也有标签栏
+💡 加装 [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch)，从 Dock 打开也有标签栏
 
 </td>
     <td valign="top">
@@ -189,7 +189,7 @@ python3 install.py
 | `Desktop app` | `/Applications` 里没有 ChatGPT.app / Codex.app | 先装 Codex 桌面版 |
 | `CodexHost` | 选了 CodexHost 安装方式，但没装 CodexHost | 装上 CodexHost，或者切换：`python3 install.py --standalone` |
 | `Injector LaunchAgent` | 后台脚本没在运行 | 重新运行 `python3 install.py`（独立安装记得加 `--standalone`） |
-| `App started with a debug port` | App 没开，或者打开时没带端口 | CodexHost：退出后经 CodexHost 启动，或者装 [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) 解决从 Dock 打开的问题。独立安装：退出再打开 |
+| `App started with a debug port` | App 没开，或者打开时没带端口 | CodexHost：退出后经 CodexHost 启动，或者装 [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) 解决从 Dock 打开的问题。独立安装：退出再打开 |
 | `Tab bar injected` | 端口有了，标签栏还没出来 | 等 5 秒再运行一次 `doctor.py`。还不行的话可能是 App 改版了，[开个 issue](https://github.com/yuanruoyu515/chatgpt-codex-tabs/issues)，附上 `doctor.py` 打印的 `inject.log` 内容 |
 
 ## <img src="assets/icons/trash.svg" width="20" height="20" align="top"> 卸载

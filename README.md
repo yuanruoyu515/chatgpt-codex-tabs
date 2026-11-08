@@ -110,7 +110,7 @@ python3 install.py
 Start Codex Desktop through CodexHost, the way its README describes. The tab bar shows up about two seconds after the window loads.
 
 ✅ Agent logos on tabs<br>
-💡 Add [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) so opening from the Dock works too
+💡 Add [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) so opening from the Dock works too
 
 </td>
     <td valign="top">
@@ -190,7 +190,7 @@ Run `python3 doctor.py` and look at the first `[!!]` line.
 | `Desktop app` | ChatGPT.app / Codex.app is not in `/Applications` | Install the Codex desktop app first |
 | `CodexHost` | You picked the CodexHost install but CodexHost isn't there | Install CodexHost, or switch: `python3 install.py --standalone` |
 | `Injector LaunchAgent` | The background script isn't running | Run `python3 install.py` again (add `--standalone` if that's your install) |
-| `App started with a debug port` | The app is closed, or was opened without the port | CodexHost: quit and start it through CodexHost, or install [codexhost-auto-launch](#opening-from-the-dock-with-codexhost) for Dock launches. Standalone: quit and open it again |
+| `App started with a debug port` | The app is closed, or was opened without the port | CodexHost: quit and start it through CodexHost, or install [codexhost-auto-launch](https://github.com/yuanruoyu515/codexhost-auto-launch) for Dock launches. Standalone: quit and open it again |
 | `Tab bar injected` | The port is there but the bar isn't yet | Wait 5 seconds and run `doctor.py` again. Still failing? The app may have changed; [open an issue](https://github.com/yuanruoyu515/chatgpt-codex-tabs/issues) with the `inject.log` lines `doctor.py` prints |
 
 ## <img src="assets/icons/trash.svg" width="20" height="20" align="top"> Uninstall
